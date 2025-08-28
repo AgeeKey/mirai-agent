@@ -30,18 +30,32 @@ class AgentLoop:
     Main trading agent that orchestrates decision making and execution
     """
     
-    def __init__(self, trading_client, risk_params: RiskParameters = None):
+    def __init__(self, trading_client, risk_params: RiskParameters = None, notifier=None):
         self.trading_client = trading_client
         self.risk_params = risk_params or RiskParameters()
         self.policy = MockLLMPolicy(self.risk_params)
         self.positions = []
         self.decision_history = []
+        self.paused = False  # Pause/resume functionality
+        self.notifier = notifier  # Optional Telegram notifier
     
     def make_decision(self, symbol: str = "BTCUSDT") -> Dict[str, Any]:
         """
         Make a trading decision for the given symbol
         """
         logger.info(f"Making decision for {symbol}")
+        
+        # Check if agent is paused
+        if self.paused:
+            logger.info("Agent is paused, returning HOLD decision")
+            return {
+                'score': 0.0,
+                'rationale': 'Agent is paused',
+                'intent': 'HOLD',
+                'action': 'HOLD',
+                'timestamp': datetime.utcnow().isoformat(),
+                'symbol': symbol
+            }
         
         try:
             # Get market data
@@ -73,6 +87,10 @@ class AgentLoop:
                 
                 if not allowed:
                     logger.warning(f"Risk Engine rejected entry: {reason}")
+                    # Notify about risk block
+                    if self.notifier:
+                        self.notifier.notify_risk_block(symbol, reason)
+                    
                     decision = AgentDecision(
                         score=0.0,
                         rationale=f"Risk Engine rejection: {reason}",
@@ -128,10 +146,10 @@ class AgentLoop:
                 'symbol': symbol,
                 'quantity': decision.get('quantity', 0.1),
                 'side': 'BUY' if 'BUY' in action else 'SELL',
-                'type': 'MARKET' if 'MARKET' in action else 'LIMIT'
+                'order_type': 'MARKET' if 'MARKET' in action else 'LIMIT'
             }
             
-            if order_params['type'] == 'LIMIT':
+            if order_params['order_type'] == 'LIMIT':
                 order_params['price'] = decision.get('target_price')
             
             # Add stop loss and take profit if available
@@ -142,6 +160,17 @@ class AgentLoop:
             
             # Execute the order
             result = self.trading_client.place_order(**order_params)
+            
+            # Notify about new entry
+            if self.notifier and action != 'HOLD':
+                self.notifier.notify_entry(
+                    symbol=symbol,
+                    side=order_params['side'],
+                    qty=order_params['quantity'],
+                    sl=decision.get('stop_loss'),
+                    tp=decision.get('take_profit'),
+                    rationale=decision.get('rationale', 'No rationale provided')
+                )
             
             # Record simulated fill in DRY_RUN mode for Risk Engine
             if hasattr(self.trading_client, 'dry_run') and self.trading_client.dry_run:
@@ -169,6 +198,19 @@ class AgentLoop:
                 )
                 
                 logger.info(f"Recorded simulated fill: {symbol} {order_params['side']} {order_params['quantity']} PnL: {mock_pnl}")
+                
+                # Simulate SL/TP triggers for notification testing
+                if self.notifier and (decision.get('stop_loss') or decision.get('take_profit')):
+                    import random
+                    if random.random() < 0.3:  # 30% chance to simulate trigger
+                        trigger_type = "Stop Loss" if mock_pnl < 0 else "Take Profit"
+                        trigger_price = decision.get('stop_loss', decision.get('take_profit', 50000.0))
+                        self.notifier.notify_sl_tp_trigger(
+                            symbol=symbol,
+                            trigger_type=trigger_type,
+                            price=trigger_price,
+                            pnl=mock_pnl
+                        )
             
             logger.info(f"Order executed successfully: {result}")
             return result
