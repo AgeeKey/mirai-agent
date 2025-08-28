@@ -27,3 +27,29 @@ class TestCLI:
         result = self.runner.invoke(cli, ['agent-once', '--symbol', 'BTCUSDT'])
         assert result.exit_code == 0
         assert 'BTCUSDT' in result.output
+    
+    def test_sanity_trade_command(self):
+        """Test sanity-trade command logs 3 orders in DRY_RUN"""
+        result = self.runner.invoke(cli, ['sanity-trade', '--symbol', 'BTCUSDT'])
+        assert result.exit_code == 0
+        assert 'MARKET order' in result.output
+        assert 'STOP_MARKET (SL)' in result.output
+        assert 'TAKE_PROFIT_MARKET (TP)' in result.output
+        assert 'DRY_RUN mode' in result.output
+    
+    def test_cancel_all_command(self):
+        """Test cancel-all command parses symbol argument"""
+        result = self.runner.invoke(cli, ['cancel-all', 'BTCUSDT'])
+        assert result.exit_code == 0
+        assert 'BTCUSDT' in result.output
+        assert 'cancel all' in result.output.lower()
+        assert 'DRY_RUN' in result.output
+    
+    def test_kill_switch_command(self):
+        """Test kill-switch command executes cancel-all and close position"""
+        result = self.runner.invoke(cli, ['kill-switch', 'BTCUSDT'])
+        assert result.exit_code == 0
+        assert 'BTCUSDT' in result.output
+        assert 'cancel all' in result.output.lower()
+        assert 'close position' in result.output.lower()
+        assert 'DRY_RUN' in result.output

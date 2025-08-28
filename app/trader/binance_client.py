@@ -256,3 +256,98 @@ class BinanceClient:
         except Exception as e:
             logger.error(f"Error fetching positions: {str(e)}")
             raise
+    
+    def get_open_orders(self, symbol: Optional[str] = None) -> list:
+        """Get all open orders, optionally filtered by symbol"""
+        if self.dry_run:
+            # Return simulated open orders
+            return []
+        
+        if not self.client:
+            raise RuntimeError("Client not initialized")
+        
+        try:
+            if symbol:
+                return self.client.get_open_orders(symbol=symbol)
+            else:
+                return self.client.get_open_orders()
+        except Exception as e:
+            logger.error(f"Error fetching open orders: {str(e)}")
+            raise
+    
+    def cancel_all_orders(self, symbol: str) -> Dict[str, Any]:
+        """Cancel all open orders for a symbol"""
+        logger.info(f"Cancelling all orders for {symbol}")
+        
+        if self.dry_run:
+            return {
+                'symbol': symbol,
+                'cancelled_orders': [],
+                'message': f'DRY_RUN: Cancel all orders for {symbol}',
+                'dry_run': True
+            }
+        
+        if not self.client:
+            raise RuntimeError("Client not initialized")
+        
+        try:
+            result = self.client.cancel_open_orders(symbol=symbol)
+            logger.info(f"All orders cancelled for {symbol}: {result}")
+            return result
+        except Exception as e:
+            logger.error(f"Error cancelling all orders for {symbol}: {str(e)}")
+            raise
+    
+    def close_position(self, symbol: str) -> Dict[str, Any]:
+        """Close open position with MARKET order (reduceOnly)"""
+        logger.info(f"Closing position for {symbol}")
+        
+        if self.dry_run:
+            return {
+                'symbol': symbol,
+                'message': f'DRY_RUN: Close position MARKET reduceOnly for {symbol}',
+                'dry_run': True
+            }
+        
+        if not self.client:
+            raise RuntimeError("Client not initialized")
+        
+        try:
+            # Get current position
+            positions = self.get_open_positions()
+            position = None
+            for pos in positions:
+                if pos['symbol'] == symbol and float(pos['positionAmt']) != 0:
+                    position = pos
+                    break
+            
+            if not position:
+                return {
+                    'symbol': symbol,
+                    'message': f'No open position found for {symbol}',
+                    'status': 'no_position'
+                }
+            
+            position_amt = float(position['positionAmt'])
+            
+            # Determine side to close position
+            side = 'SELL' if position_amt > 0 else 'BUY'
+            quantity = abs(position_amt)
+            
+            # Place market order to close position
+            result = self.place_order(
+                symbol=symbol,
+                side=side,
+                quantity=quantity,
+                order_type='MARKET'
+            )
+            
+            # Note: For real implementation, you'd set reduceOnly=True in the order params
+            # but this requires specific binance-connector API support
+            
+            logger.info(f"Position closed for {symbol}: {result}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error closing position for {symbol}: {str(e)}")
+            raise

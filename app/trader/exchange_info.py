@@ -53,6 +53,7 @@ class ExchangeInfo:
     def validate_price(self, symbol: str, price: float) -> float:
         """
         Validate and adjust price according to tickSize filter
+        Uses strict rounding to avoid -1013 errors
         """
         filters = self.get_symbol_filters(symbol)
         tick_size = Decimal(filters['tickSize'])
@@ -60,8 +61,9 @@ class ExchangeInfo:
         # Convert price to Decimal for precise calculation
         price_decimal = Decimal(str(price))
         
-        # Round down to nearest tick
-        adjusted_price = (price_decimal // tick_size) * tick_size
+        # Use strict rounding to nearest tick to avoid precision errors
+        # Round to nearest tick, then ensure it's properly formatted
+        adjusted_price = (price_decimal / tick_size).quantize(Decimal('1'), rounding=ROUND_DOWN) * tick_size
         
         result = float(adjusted_price)
         
@@ -73,6 +75,7 @@ class ExchangeInfo:
     def validate_quantity(self, symbol: str, quantity: float) -> float:
         """
         Validate and adjust quantity according to stepSize and minQty filters
+        Uses strict rounding to avoid -1013 errors
         """
         filters = self.get_symbol_filters(symbol)
         step_size = Decimal(filters['stepSize'])
@@ -92,8 +95,9 @@ class ExchangeInfo:
             logger.warning(f"Quantity {quantity} above maximum {max_qty} for {symbol}")
             qty_decimal = max_qty
         
+        # Use strict rounding to nearest step to avoid precision errors
         # Round down to nearest step
-        adjusted_qty = (qty_decimal // step_size) * step_size
+        adjusted_qty = (qty_decimal / step_size).quantize(Decimal('1'), rounding=ROUND_DOWN) * step_size
         
         # Ensure we don't go below minimum after rounding
         if adjusted_qty < min_qty:

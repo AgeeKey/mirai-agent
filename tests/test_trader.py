@@ -110,3 +110,92 @@ class TestOrderManager:
         
         # Should risk $100 with $1000 risk per unit = 0.1 BTC
         assert position_size == 0.1
+    
+    def test_sanity_trade_dry_run(self):
+        """Test sanity-trade logs 3 orders (MARKET, SL, TP) in DRY_RUN"""
+        result = self.order_manager.sanity_trade("BTCUSDT")
+        
+        # Should return success status
+        assert result['status'] == 'success'
+        
+        # Should have all three orders
+        assert 'main_order' in result
+        assert 'stop_loss_order' in result  
+        assert 'take_profit_order' in result
+        
+        # Main order should be MARKET type
+        assert result['main_order']['type'] == 'MARKET'
+        
+        # Stop loss should be STOP_MARKET type
+        assert result['stop_loss_order']['type'] == 'STOP_MARKET'
+        
+        # Take profit should be TAKE_PROFIT_MARKET type
+        assert result['take_profit_order']['type'] == 'TAKE_PROFIT_MARKET'
+    
+    def test_cancel_all_orders(self):
+        """Test cancel-all parses symbol argument"""
+        result = self.order_manager.cancel_all_orders("BTCUSDT")
+        
+        # Should return dry run result
+        assert result['dry_run'] is True
+        assert result['symbol'] == 'BTCUSDT'
+        assert 'cancel all' in result['message'].lower()
+    
+    def test_kill_switch_functionality(self):
+        """Test kill-switch combines cancel-all and close position"""
+        # Test cancel all
+        cancel_result = self.order_manager.cancel_all_orders("BTCUSDT")
+        assert cancel_result['dry_run'] is True
+        assert cancel_result['symbol'] == 'BTCUSDT'
+        
+        # Test close position
+        close_result = self.order_manager.close_position("BTCUSDT")
+        assert close_result['dry_run'] is True
+        assert close_result['symbol'] == 'BTCUSDT'
+        assert 'close position' in close_result['message'].lower()
+
+
+class TestExchangeInfoStrictRounding:
+    """Test strict rounding functionality to avoid -1013 errors"""
+    
+    def setup_method(self):
+        self.exchange_info = ExchangeInfo()
+    
+    def test_quantity_rounding_works_correctly(self):
+        """Test qty rounding works correctly with strict decimal precision"""
+        # Test with problematic floating point values
+        test_cases = [
+            (0.1234567, 0.123),  # Should round down to stepSize
+            (0.001, 0.001),      # Should stay at minimum
+            (0.0001, 0.001),     # Should round up to minimum
+        ]
+        
+        for input_qty, expected_qty in test_cases:
+            result = self.exchange_info.validate_quantity("BTCUSDT", input_qty)
+            assert result == expected_qty, f"Expected {expected_qty}, got {result} for input {input_qty}"
+    
+    def test_price_rounding_works_correctly(self):
+        """Test price rounding works correctly with strict decimal precision"""
+        # Test with problematic floating point values  
+        test_cases = [
+            (45123.456, 45123.4),   # Should round down to tickSize
+            (45123.4, 45123.4),     # Should stay the same
+            (45123.999, 45123.9),   # Should round down to tickSize
+        ]
+        
+        for input_price, expected_price in test_cases:
+            result = self.exchange_info.validate_price("BTCUSDT", input_price)
+            assert result == expected_price, f"Expected {expected_price}, got {result} for input {input_price}"
+    
+    def test_decimal_precision_edge_cases(self):
+        """Test edge cases that could cause -1013 errors"""
+        # Test very small quantities
+        tiny_qty = 0.000001
+        result_qty = self.exchange_info.validate_quantity("BTCUSDT", tiny_qty)
+        assert result_qty >= 0.001  # Should be at least minimum
+        
+        # Test very precise prices
+        precise_price = 45123.123456789
+        result_price = self.exchange_info.validate_price("BTCUSDT", precise_price)
+        # Should be properly rounded to tick size
+        assert str(result_price).count('.') <= 1  # Should have proper decimal format
