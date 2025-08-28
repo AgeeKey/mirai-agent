@@ -270,5 +270,23 @@ def risk_reset():
         sys.exit(1)
 
 
+@cli.command()
+def telegram_bot():
+    """Start the Telegram bot for remote monitoring and control"""
+    try:
+        # Import from our app.telegram_bot module
+        from telegram_bot.bot import start_bot
+        start_bot()
+    except ImportError as e:
+        if "python-telegram-bot" in str(e) or "No module named 'telegram'" in str(e):
+            click.echo("❌ python-telegram-bot not installed. Install it with: pip install python-telegram-bot>=20")
+        else:
+            click.echo(f"❌ Import error: {str(e)}")
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"❌ Telegram bot failed: {str(e)}")
+        sys.exit(1)
+
+
 if __name__ == '__main__':
     cli()
