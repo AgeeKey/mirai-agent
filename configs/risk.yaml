@@ -1,0 +1,57 @@
+# Risk Management Configuration
+
+# Position Sizing
+position_sizing:
+  max_position_size: 1000.0  # Maximum position size in USDT
+  max_positions: 5           # Maximum number of concurrent positions
+  risk_per_trade: 0.02       # Risk 2% of portfolio per trade
+  min_position_size: 10.0    # Minimum position size in USDT
+
+# Stop Loss & Take Profit
+risk_ratios:
+  default_stop_loss_percent: 0.02    # 2% stop loss
+  default_take_profit_percent: 0.04  # 4% take profit (1:2 risk/reward)
+  max_stop_loss_percent: 0.05        # Maximum allowed stop loss
+  min_take_profit_percent: 0.01      # Minimum take profit
+
+# Portfolio Limits
+portfolio:
+  max_drawdown: 0.15         # Maximum portfolio drawdown (15%)
+  daily_loss_limit: 0.05     # Stop trading if daily loss exceeds 5%
+  max_risk_per_symbol: 0.10  # Maximum risk per symbol (10% of portfolio)
+
+# Leverage & Margin
+leverage:
+  max_leverage: 10           # Maximum leverage allowed
+  default_leverage: 3        # Default leverage for new positions
+  margin_ratio_warning: 0.8  # Warning when margin ratio exceeds 80%
+  margin_ratio_stop: 0.9     # Stop trading when margin ratio exceeds 90%
+
+# Time-based Limits
+time_limits:
+  max_trades_per_hour: 10    # Maximum trades per hour
+  max_trades_per_day: 50     # Maximum trades per day
+  cooldown_after_loss: 300   # Cooldown period in seconds after a loss
+
+# Volatility Controls
+volatility:
+  max_atr_multiplier: 3.0    # Maximum ATR multiplier for stop loss
+  min_volatility_threshold: 0.01  # Minimum volatility to consider trading
+  high_volatility_threshold: 0.05  # Reduce position size above this volatility
+
+# Symbol-specific Risk Settings
+symbol_risk:
+  BTCUSDT:
+    max_position_size: 2000.0
+    stop_loss_percent: 0.015
+    take_profit_percent: 0.03
+  
+  ETHUSDT:
+    max_position_size: 1500.0
+    stop_loss_percent: 0.02
+    take_profit_percent: 0.04
+  
+  ADAUSDT:
+    max_position_size: 500.0
+    stop_loss_percent: 0.03
+    take_profit_percent: 0.06

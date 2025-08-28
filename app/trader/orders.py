@@ -1,0 +1,274 @@
+"""
+Order management with unified MARKET+SL/TP functionality
+"""
+import logging
+from typing import Dict, Any, Optional, List
+from datetime import datetime
+from enum import Enum
+
+from .binance_client import BinanceClient
+from .exchange_info import ExchangeInfo
+
+
+logger = logging.getLogger(__name__)
+
+
+class OrderType(Enum):
+    MARKET = "MARKET"
+    LIMIT = "LIMIT"
+    STOP_MARKET = "STOP_MARKET"
+    TAKE_PROFIT_MARKET = "TAKE_PROFIT_MARKET"
+
+
+class OrderSide(Enum):
+    BUY = "BUY"
+    SELL = "SELL"
+
+
+class OrderStatus(Enum):
+    NEW = "NEW"
+    PARTIALLY_FILLED = "PARTIALLY_FILLED" 
+    FILLED = "FILLED"
+    CANCELED = "CANCELED"
+    REJECTED = "REJECTED"
+
+
+class OrderManager:
+    """
+    Unified order management system for Binance UMFutures
+    Supports MARKET orders with automatic SL/TP placement
+    """
+    
+    def __init__(self, client: BinanceClient):
+        self.client = client
+        self.exchange_info = ExchangeInfo()
+        self.active_orders = {}
+        self.order_history = []
+    
+    def place_market_order_with_sltp(self, symbol: str, side: str, quantity: float,
+                                   stop_loss_price: Optional[float] = None,
+                                   take_profit_price: Optional[float] = None) -> Dict[str, Any]:
+        """
+        Place a market order with automatic stop loss and take profit orders
+        This is the unified MARKET+SL/TP functionality
+        """
+        logger.info(f"Placing market order with SL/TP: {side} {quantity} {symbol}")
+        
+        try:
+            # Validate order parameters
+            validated_params = self.exchange_info.validate_order_params(symbol, quantity)
+            adjusted_quantity = validated_params['quantity']
+            
+            # Place the main market order
+            market_order = self.client.place_order(
+                symbol=symbol,
+                side=side,
+                quantity=adjusted_quantity,
+                order_type='MARKET'
+            )
+            
+            order_result = {
+                'main_order': market_order,
+                'stop_loss_order': None,
+                'take_profit_order': None,
+                'status': 'success'
+            }
+            
+            # Store the order
+            order_id = market_order.get('orderId', f"DRY_RUN_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}")
+            self.active_orders[order_id] = {
+                'symbol': symbol,
+                'side': side,
+                'quantity': adjusted_quantity,
+                'type': 'MARKET_WITH_SLTP',
+                'timestamp': datetime.utcnow(),
+                'main_order': market_order
+            }
+            
+            # Place stop loss order if specified
+            if stop_loss_price:
+                try:
+                    sl_order = self._place_stop_loss(symbol, side, adjusted_quantity, stop_loss_price)
+                    order_result['stop_loss_order'] = sl_order
+                    self.active_orders[order_id]['stop_loss_order'] = sl_order
+                    logger.info(f"Stop loss order placed at {stop_loss_price}")
+                except Exception as e:
+                    logger.error(f"Failed to place stop loss: {str(e)}")
+                    order_result['sl_error'] = str(e)
+            
+            # Place take profit order if specified
+            if take_profit_price:
+                try:
+                    tp_order = self._place_take_profit(symbol, side, adjusted_quantity, take_profit_price)
+                    order_result['take_profit_order'] = tp_order
+                    self.active_orders[order_id]['take_profit_order'] = tp_order
+                    logger.info(f"Take profit order placed at {take_profit_price}")
+                except Exception as e:
+                    logger.error(f"Failed to place take profit: {str(e)}")
+                    order_result['tp_error'] = str(e)
+            
+            # Add to history
+            self.order_history.append(order_result)
+            
+            return order_result
+            
+        except Exception as e:
+            logger.error(f"Error placing market order with SL/TP: {str(e)}")
+            return {
+                'status': 'error',
+                'error': str(e),
+                'main_order': None,
+                'stop_loss_order': None,
+                'take_profit_order': None
+            }
+    
+    def _place_stop_loss(self, symbol: str, original_side: str, quantity: float, stop_price: float) -> Dict[str, Any]:
+        """Place a stop loss order"""
+        # Stop loss side is opposite to original order
+        sl_side = OrderSide.SELL.value if original_side == OrderSide.BUY.value else OrderSide.BUY.value
+        
+        # Validate stop price
+        validated_params = self.exchange_info.validate_order_params(symbol, quantity, stop_price)
+        adjusted_stop_price = validated_params['price']
+        
+        return self.client.place_order(
+            symbol=symbol,
+            side=sl_side,
+            quantity=quantity,
+            order_type='STOP_MARKET',
+            price=adjusted_stop_price
+        )
+    
+    def _place_take_profit(self, symbol: str, original_side: str, quantity: float, tp_price: float) -> Dict[str, Any]:
+        """Place a take profit order"""
+        # Take profit side is opposite to original order
+        tp_side = OrderSide.SELL.value if original_side == OrderSide.BUY.value else OrderSide.BUY.value
+        
+        # Validate take profit price
+        validated_params = self.exchange_info.validate_order_params(symbol, quantity, tp_price)
+        adjusted_tp_price = validated_params['price']
+        
+        return self.client.place_order(
+            symbol=symbol,
+            side=tp_side,
+            quantity=quantity,
+            order_type='TAKE_PROFIT_MARKET',
+            price=adjusted_tp_price
+        )
+    
+    def place_limit_order(self, symbol: str, side: str, quantity: float, price: float) -> Dict[str, Any]:
+        """Place a limit order"""
+        logger.info(f"Placing limit order: {side} {quantity} {symbol} at {price}")
+        
+        try:
+            # Validate parameters
+            validated_params = self.exchange_info.validate_order_params(symbol, quantity, price)
+            
+            order = self.client.place_order(
+                symbol=symbol,
+                side=side,
+                quantity=validated_params['quantity'],
+                order_type='LIMIT',
+                price=validated_params['price']
+            )
+            
+            # Store the order
+            order_id = order.get('orderId', f"DRY_RUN_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}")
+            self.active_orders[order_id] = {
+                'symbol': symbol,
+                'side': side,
+                'quantity': validated_params['quantity'],
+                'price': validated_params['price'],
+                'type': 'LIMIT',
+                'timestamp': datetime.utcnow(),
+                'order': order
+            }
+            
+            self.order_history.append(order)
+            return order
+            
+        except Exception as e:
+            logger.error(f"Error placing limit order: {str(e)}")
+            raise
+    
+    def cancel_order(self, symbol: str, order_id: str) -> Dict[str, Any]:
+        """Cancel an active order"""
+        if self.client.dry_run:
+            # Simulate order cancellation
+            if order_id in self.active_orders:
+                del self.active_orders[order_id]
+                return {
+                    'orderId': order_id,
+                    'symbol': symbol,
+                    'status': 'CANCELED',
+                    'dry_run': True
+                }
+            else:
+                raise ValueError(f"Order {order_id} not found")
+        
+        try:
+            result = self.client.client.cancel_order(symbol=symbol, orderId=order_id)
+            
+            # Remove from active orders
+            if order_id in self.active_orders:
+                del self.active_orders[order_id]
+            
+            return result
+        except Exception as e:
+            logger.error(f"Error canceling order: {str(e)}")
+            raise
+    
+    def get_order_status(self, symbol: str, order_id: str) -> Dict[str, Any]:
+        """Get the status of a specific order"""
+        if self.client.dry_run:
+            if order_id in self.active_orders:
+                order_info = self.active_orders[order_id]
+                return {
+                    'orderId': order_id,
+                    'symbol': symbol,
+                    'status': 'FILLED',  # Assume filled in dry run
+                    'side': order_info['side'],
+                    'quantity': order_info['quantity'],
+                    'type': order_info['type'],
+                    'dry_run': True
+                }
+            else:
+                raise ValueError(f"Order {order_id} not found")
+        
+        try:
+            return self.client.client.query_order(symbol=symbol, orderId=order_id)
+        except Exception as e:
+            logger.error(f"Error querying order status: {str(e)}")
+            raise
+    
+    def get_active_orders(self, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get all active orders, optionally filtered by symbol"""
+        if symbol:
+            return [order for order in self.active_orders.values() if order['symbol'] == symbol]
+        return list(self.active_orders.values())
+    
+    def get_order_history(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Get order history"""
+        return self.order_history[-limit:]
+    
+    def calculate_position_size(self, symbol: str, risk_amount: float, entry_price: float, 
+                              stop_loss_price: float) -> float:
+        """
+        Calculate position size based on risk amount and stop loss distance
+        """
+        if entry_price <= 0 or stop_loss_price <= 0:
+            raise ValueError("Entry price and stop loss price must be positive")
+        
+        # Calculate risk per unit
+        risk_per_unit = abs(entry_price - stop_loss_price)
+        
+        if risk_per_unit == 0:
+            raise ValueError("Stop loss price cannot equal entry price")
+        
+        # Calculate quantity
+        raw_quantity = risk_amount / risk_per_unit
+        
+        # Validate and adjust quantity according to exchange filters
+        validated_params = self.exchange_info.validate_order_params(symbol, raw_quantity)
+        
+        return validated_params['quantity']
