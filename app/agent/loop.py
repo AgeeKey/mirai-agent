@@ -146,10 +146,10 @@ class AgentLoop:
                 'symbol': symbol,
                 'quantity': decision.get('quantity', 0.1),
                 'side': 'BUY' if 'BUY' in action else 'SELL',
-                'type': 'MARKET' if 'MARKET' in action else 'LIMIT'
+                'order_type': 'MARKET' if 'MARKET' in action else 'LIMIT'
             }
             
-            if order_params['type'] == 'LIMIT':
+            if order_params['order_type'] == 'LIMIT':
                 order_params['price'] = decision.get('target_price')
             
             # Add stop loss and take profit if available
