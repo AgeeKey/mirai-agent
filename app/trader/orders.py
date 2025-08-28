@@ -316,3 +316,65 @@ class OrderManager:
         except Exception as e:
             logger.error(f"Error in sanity trade for {symbol}: {str(e)}")
             raise
+
+
+def validate_and_round_qty(symbol: str, qty: float, sl_distance: float, margin: float, leverage: float) -> float:
+    """
+    Position sizing validator - validates and rounds quantity based on constraints
+    
+    Args:
+        symbol: Trading symbol (e.g. 'BTCUSDT')
+        qty: Desired quantity
+        sl_distance: Stop loss distance (price difference)
+        margin: Available margin
+        leverage: Leverage multiplier
+        
+    Returns:
+        Safe quantity or raises ValueError if below minimum
+        
+    Raises:
+        ValueError: If quantity is below exchange minimums
+    """
+    try:
+        # Initialize exchange info to get filters
+        exchange_info = ExchangeInfo()
+        
+        # Get exchange filters
+        filters = exchange_info.get_symbol_filters(symbol)
+        min_qty = float(filters['minQty'])
+        step_size = float(filters['stepSize'])
+        min_notional = float(filters['minNotional'])
+        
+        # Calculate quantity by stop loss (risk-based sizing)
+        if sl_distance > 0:
+            qty_by_stop = margin / sl_distance  # Risk-based position size
+        else:
+            qty_by_stop = qty
+        
+        # Calculate quantity by margin (margin-based sizing)
+        qty_by_margin = margin * leverage
+        
+        # Take minimum of both constraints
+        safe_qty = min(qty, qty_by_stop, qty_by_margin)
+        
+        # Check if quantity meets minimum requirements BEFORE rounding
+        if safe_qty < min_qty:
+            raise ValueError(f"Quantity {safe_qty} below minQty {min_qty} for {symbol}")
+        
+        # Round to exchange step size
+        validated_qty = exchange_info.validate_quantity(symbol, safe_qty)
+        
+        # Check notional value (assuming current price from exchange info)
+        # For this validator, we'll use a mock price since we don't have real-time data
+        mock_price = 50000.0  # Mock price for validation
+        notional = validated_qty * mock_price
+        
+        if notional < min_notional:
+            raise ValueError(f"Notional value {notional} below minNotional {min_notional} for {symbol}")
+        
+        logger.info(f"Position size validated for {symbol}: {qty} -> {validated_qty}")
+        return validated_qty
+        
+    except Exception as e:
+        logger.error(f"Position sizing validation failed for {symbol}: {str(e)}")
+        raise

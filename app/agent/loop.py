@@ -2,11 +2,24 @@
 Main agent loop for trading decisions
 """
 import logging
+import sys
+import os
 from typing import Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
+
+# Add the app directory to the Python path for CLI usage
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from .schema import AgentDecision, MarketData, RiskParameters
 from .policy import MockLLMPolicy
+
+# Import risk engine with proper path handling
+try:
+    from ..trader.risk_engine import get_risk_engine
+except ImportError:
+    # Fallback for CLI usage
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+    from trader.risk_engine import get_risk_engine
 
 
 logger = logging.getLogger(__name__)
@@ -44,7 +57,30 @@ class AgentLoop:
             # Get agent decision
             decision = self.policy.analyze_market(market_data)
             
-            # Evaluate risk
+            # Check Risk Engine gates before proposing order
+            if decision.action != "HOLD":
+                risk_engine = get_risk_engine()
+                now_utc = datetime.now(timezone.utc)
+                
+                # Get account state for position checking
+                try:
+                    account_info = self.trading_client.get_account_info()
+                except Exception as e:
+                    logger.warning(f"Could not get account info for risk check: {e}")
+                    account_info = {}
+                
+                allowed, reason = risk_engine.allow_entry(now_utc, symbol, account_info)
+                
+                if not allowed:
+                    logger.warning(f"Risk Engine rejected entry: {reason}")
+                    decision = AgentDecision(
+                        score=0.0,
+                        rationale=f"Risk Engine rejection: {reason}",
+                        intent="HOLD",
+                        action="HOLD"
+                    )
+            
+            # Evaluate risk (existing policy risk check)
             if not self.policy.evaluate_risk(decision, self.positions):
                 logger.warning("Decision rejected due to risk constraints")
                 decision = AgentDecision(
@@ -106,6 +142,33 @@ class AgentLoop:
             
             # Execute the order
             result = self.trading_client.place_order(**order_params)
+            
+            # Record simulated fill in DRY_RUN mode for Risk Engine
+            if hasattr(self.trading_client, 'dry_run') and self.trading_client.dry_run:
+                risk_engine = get_risk_engine()
+                now_utc = datetime.now(timezone.utc)
+                
+                # Mock PnL calculation for simulation
+                mock_pnl = 0.0  # Default to breakeven
+                if order_params['side'] == 'BUY':
+                    # Simulate a small profit/loss randomly
+                    import random
+                    mock_pnl = random.uniform(-5.0, 10.0)  # -5 to +10 USDT
+                else:
+                    import random
+                    mock_pnl = random.uniform(-5.0, 10.0)  # -5 to +10 USDT
+                
+                # Record the simulated fill
+                risk_engine.record_fill(
+                    ts=now_utc.isoformat(),
+                    symbol=symbol,
+                    side=order_params['side'],
+                    qty=order_params['quantity'],
+                    price=decision.get('target_price', 50000.0),  # Mock price
+                    pnl=mock_pnl
+                )
+                
+                logger.info(f"Recorded simulated fill: {symbol} {order_params['side']} {order_params['quantity']} PnL: {mock_pnl}")
             
             logger.info(f"Order executed successfully: {result}")
             return result

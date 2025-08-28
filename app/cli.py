@@ -225,5 +225,50 @@ def kill_switch(symbol, dry_run):
         sys.exit(1)
 
 
+@cli.command()
+def risk_status():
+    """Print current risk engine day state as JSON"""
+    try:
+        from trader.risk_engine import get_risk_engine
+        from datetime import datetime, timezone
+        import json
+        
+        risk_engine = get_risk_engine()
+        now_utc = datetime.now(timezone.utc)
+        day_state = risk_engine.get_day_state(now_utc)
+        
+        # Convert to dict for JSON serialization
+        state_dict = {
+            'date_utc': day_state.date_utc,
+            'day_pnl': day_state.day_pnl,
+            'max_day_pnl': day_state.max_day_pnl,
+            'trades_today': day_state.trades_today,
+            'consecutive_losses': day_state.consecutive_losses,
+            'cooldown_until': day_state.cooldown_until
+        }
+        
+        click.echo(json.dumps(state_dict, indent=2))
+        
+    except Exception as e:
+        click.echo(f"❌ Risk status failed: {str(e)}")
+        sys.exit(1)
+
+
+@cli.command()
+def risk_reset():
+    """Reset today's risk counters for testing"""
+    try:
+        from trader.risk_engine import get_risk_engine
+        
+        risk_engine = get_risk_engine()
+        risk_engine.reset_day_state()
+        
+        click.echo("✅ Risk counters reset successfully!")
+        
+    except Exception as e:
+        click.echo(f"❌ Risk reset failed: {str(e)}")
+        sys.exit(1)
+
+
 if __name__ == '__main__':
     cli()

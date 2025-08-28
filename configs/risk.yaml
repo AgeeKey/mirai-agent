@@ -1,5 +1,14 @@
 # Risk Management Configuration
 
+# Risk Engine Parameters
+risk_engine:
+  DAILY_MAX_LOSS: -30        # Maximum daily loss (e.g. -30 USDT)
+  DAILY_TRAIL_DRAWDOWN: 20   # Stop-day if max_day_pnl - day_pnl >= value
+  MAX_TRADES_PER_DAY: 6      # Maximum trades per day
+  MAX_CONSECUTIVE_LOSSES: 3  # Maximum consecutive losses before cooldown
+  COOLDOWN_MINUTES: 15       # Cooldown period in minutes after consecutive losses
+  ONE_POSITION_PER_SYMBOL: true  # Allow only one position per symbol
+
 # Position Sizing
 position_sizing:
   max_position_size: 1000.0  # Maximum position size in USDT

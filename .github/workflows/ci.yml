@@ -44,7 +44,7 @@ jobs:
     
     - name: Run tests with pytest
       run: |
-        pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
+        pytest -q
       env:
         PYTHONPATH: ${{ github.workspace }}
         DRY_RUN: true
