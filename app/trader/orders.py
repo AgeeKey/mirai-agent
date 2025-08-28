@@ -272,3 +272,47 @@ class OrderManager:
         validated_params = self.exchange_info.validate_order_params(symbol, raw_quantity)
         
         return validated_params['quantity']
+    
+    def cancel_all_orders(self, symbol: str) -> Dict[str, Any]:
+        """Cancel all open orders for a symbol"""
+        return self.client.cancel_all_orders(symbol)
+    
+    def close_position(self, symbol: str) -> Dict[str, Any]:
+        """Close open position with MARKET order (reduceOnly)"""
+        return self.client.close_position(symbol)
+    
+    def sanity_trade(self, symbol: str = 'BTCUSDT') -> Dict[str, Any]:
+        """
+        Place a sanity trade: tiny MARKET order with SL and TP
+        Normalized to filters (tickSize/stepSize/minQty)
+        """
+        logger.info(f"Executing sanity trade for {symbol}")
+        
+        try:
+            # Get current market data for price reference
+            market_data = self.client.get_market_data(symbol)
+            current_price = market_data['price']
+            
+            # Use minimum quantity for sanity trade
+            filters = self.exchange_info.get_symbol_filters(symbol)
+            min_qty = float(filters['minQty'])
+            
+            # Calculate SL and TP prices (small spread for safety)
+            stop_loss_price = current_price * 0.99  # 1% below current price
+            take_profit_price = current_price * 1.01  # 1% above current price
+            
+            # Place market order with SL/TP
+            result = self.place_market_order_with_sltp(
+                symbol=symbol,
+                side='BUY',  # Always buy for sanity test
+                quantity=min_qty,
+                stop_loss_price=stop_loss_price,
+                take_profit_price=take_profit_price
+            )
+            
+            logger.info(f"Sanity trade completed for {symbol}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error in sanity trade for {symbol}: {str(e)}")
+            raise
