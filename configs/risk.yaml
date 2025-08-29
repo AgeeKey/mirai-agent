@@ -9,6 +9,12 @@ risk_engine:
   COOLDOWN_MINUTES: 15       # Cooldown period in minutes after consecutive losses
   ONE_POSITION_PER_SYMBOL: true  # Allow only one position per symbol
 
+# AI Advisor Parameters
+advisor:
+  ADVISOR_THRESHOLD: 0.70    # Minimum score required for trade entry
+  RECOVERY_THRESHOLD: 0.80   # Minimum score required for recovery trades after losses
+  RECOVERY_MAX_TRIES: 3      # Maximum recovery attempts after consecutive losses
+
 # Position Sizing
 position_sizing:
   max_position_size: 1000.0  # Maximum position size in USDT
