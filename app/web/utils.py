@@ -69,6 +69,19 @@ def get_safe_status_data() -> Dict[str, Any]:
         now_utc = datetime.now(timezone.utc)
         day_state = risk_engine.get_day_state(now_utc)
         
+        # Get advisor data from last decision if available
+        last_decision = agent_state.get("last_decision")
+        advisor_score = 0.0
+        advisor_rationale = "No advisor data"
+        advisor_strategy = "none"
+        advisor_action = "HOLD"
+        
+        if last_decision and isinstance(last_decision, dict):
+            advisor_score = last_decision.get("advisor_score", 0.0)
+            advisor_rationale = last_decision.get("advisor_rationale", "No advisor data")
+            advisor_strategy = last_decision.get("advisor_strategy", "none")
+            advisor_action = last_decision.get("advisor_action", "HOLD")
+        
         return {
             "date": now_utc.strftime('%Y-%m-%d %H:%M:%S UTC'),
             "mode": agent_state["mode"],
@@ -80,7 +93,11 @@ def get_safe_status_data() -> Dict[str, Any]:
             "openPositions": [],  # Safe fallback - empty list
             "errorsCount": agent_state["errors_count"],
             "lastDecision": agent_state["last_decision"],
-            "agentPaused": agent_state["paused"]
+            "agentPaused": agent_state["paused"],
+            "advisorScore": advisor_score,
+            "advisorRationale": advisor_rationale,
+            "advisorStrategy": advisor_strategy,
+            "advisorAction": advisor_action
         }
     except Exception as e:
         logger.warning(f"Error getting status data: {e}")
@@ -95,5 +112,9 @@ def get_safe_status_data() -> Dict[str, Any]:
             "openPositions": [],
             "errorsCount": agent_state["errors_count"],
             "lastDecision": None,
-            "agentPaused": agent_state["paused"]
+            "agentPaused": agent_state["paused"],
+            "advisorScore": 0.0,
+            "advisorRationale": "Error getting advisor data",
+            "advisorStrategy": "error",
+            "advisorAction": "HOLD"
         }

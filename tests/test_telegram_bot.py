@@ -266,28 +266,38 @@ class TestIntegrationWithAgentLoop:
         
         mock_notifier = Mock()
         
-        # Mock risk engine to block trades
-        with patch('app.agent.loop.get_risk_engine') as mock_get_risk_engine:
-            mock_risk_engine = Mock()
-            mock_risk_engine.allow_entry.return_value = (False, "Daily loss limit exceeded")
-            mock_get_risk_engine.return_value = mock_risk_engine
+        # Mock advisor to return high score so it passes advisor gating
+        with patch('app.agent.loop.get_signal_score') as mock_get_signal_score:
+            mock_get_signal_score.return_value = {
+                'score': 0.85,  # High score to pass advisor threshold
+                'rationale': 'Strong signals',
+                'strategy': 'test',
+                'action': 'BUY'
+            }
             
-            agent_loop = AgentLoop(mock_client, notifier=mock_notifier)
-            
-            # Force a non-HOLD decision by mocking the policy
-            with patch.object(agent_loop.policy, 'analyze_market') as mock_analyze:
-                from app.agent.schema import AgentDecision
-                mock_analyze.return_value = AgentDecision(
-                    score=0.8,
-                    rationale="Test trade",
-                    intent="BUY",
-                    action="MARKET_BUY"
-                )
+            # Mock risk engine to block trades
+            with patch('app.agent.loop.get_risk_engine') as mock_get_risk_engine:
+                mock_risk_engine = Mock()
+                mock_risk_engine.get_day_state.return_value = Mock(consecutive_losses=0)
+                mock_risk_engine.allow_entry.return_value = (False, "Daily loss limit exceeded")
+                mock_get_risk_engine.return_value = mock_risk_engine
                 
-                decision = agent_loop.make_decision("BTCUSDT")
+                agent_loop = AgentLoop(mock_client, notifier=mock_notifier)
                 
-                # Should be blocked and notifier should be called
-                assert decision['action'] == 'HOLD'
-                mock_notifier.notify_risk_block.assert_called_once_with(
-                    "BTCUSDT", "Daily loss limit exceeded"
-                )
+                # Force a non-HOLD decision by mocking the policy
+                with patch.object(agent_loop.policy, 'analyze_market') as mock_analyze:
+                    from app.agent.schema import AgentDecision
+                    mock_analyze.return_value = AgentDecision(
+                        score=0.8,
+                        rationale="Test trade",
+                        intent="BUY",
+                        action="MARKET_BUY"
+                    )
+                    
+                    decision = agent_loop.make_decision("BTCUSDT")
+                    
+                    # Should be blocked and notifier should be called
+                    assert decision['action'] == 'HOLD'
+                    mock_notifier.notify_risk_block.assert_called_once_with(
+                        "BTCUSDT", "Daily loss limit exceeded"
+                    )

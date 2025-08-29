@@ -159,6 +159,11 @@ class TelegramBot:
             if self.agent_loop and hasattr(self.agent_loop, 'positions'):
                 open_positions = len(self.agent_loop.positions)
             
+            # Get advisor state if available
+            advisor_state = {}
+            if self.agent_loop and hasattr(self.agent_loop, 'get_advisor_state'):
+                advisor_state = self.agent_loop.get_advisor_state()
+            
             status_data = {
                 'day_pnl': day_state.day_pnl,
                 'max_day_pnl': day_state.max_day_pnl,
@@ -167,11 +172,29 @@ class TelegramBot:
                 'cooldown_until': day_state.cooldown_until,
                 'open_positions': open_positions,
                 'trading_mode': self.trading_mode,
-                'agent_paused': getattr(self.agent_loop, 'paused', False) if self.agent_loop else False
+                'agent_paused': getattr(self.agent_loop, 'paused', False) if self.agent_loop else False,
+                'last_score': advisor_state.get('score', 0.0),
+                'last_rationale': advisor_state.get('rationale', 'No advisor data')[:100]  # Truncate for display
             }
             
             formatted_json = json.dumps(status_data, indent=2)
-            message = f"📊 *Agent Status*\n```json\n{formatted_json}\n```"
+            
+            # Create more readable message
+            message = f"""📊 *Agent Status*
+
+💰 Day PnL: `{status_data['day_pnl']:.2f}`
+📈 Max Day PnL: `{status_data['max_day_pnl']:.2f}`
+📊 Trades Today: `{status_data['trades_today']}`
+❌ Consecutive Losses: `{status_data['consecutive_losses']}`
+🏪 Open Positions: `{status_data['open_positions']}`
+🎯 Trading Mode: `{status_data['trading_mode']}`
+⏸️ Agent Paused: `{status_data['agent_paused']}`
+
+🤖 *AI Advisor*
+Score: `{status_data['last_score']:.3f}`
+Rationale: _{status_data['last_rationale']}_
+
+Use /mode <advisor|semi|auto> to change mode"""
             
             await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
             

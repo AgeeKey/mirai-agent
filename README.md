@@ -139,6 +139,78 @@ mypy app/
 - **configs/**: YAML configuration files
 - **tests/**: Comprehensive test suite
 
+## 🤖 AI Advisor
+
+The AI Advisor provides intelligent signal analysis and gating for trading decisions using either OpenAI GPT models or deterministic mock logic.
+
+### Configuration
+
+Configure advisor thresholds in `configs/risk.yaml`:
+
+```yaml
+advisor:
+  ADVISOR_THRESHOLD: 0.70    # Minimum score required for trade entry
+  RECOVERY_THRESHOLD: 0.80   # Minimum score for recovery trades after losses
+  RECOVERY_MAX_TRIES: 3      # Maximum recovery attempts after consecutive losses
+```
+
+### OpenAI Integration
+
+Set up OpenAI API access in your environment:
+
+```bash
+# Required for real OpenAI analysis
+export OPENAI_API_KEY=sk-your-openai-api-key
+
+# Without API key, uses deterministic mock for testing
+```
+
+### How It Works
+
+1. **Market Analysis**: Advisor analyzes market features (price, EMA, RSI, ATR, ADX) 
+2. **Score Generation**: Returns confidence score (0.0-1.0) with rationale and strategy
+3. **Gating Logic**: 
+   - Scores ≥ 0.70 → Allow trade entry
+   - Scores < 0.70 → Block trade with reason
+4. **Recovery Mode**: After consecutive losses, requires score ≥ 0.80 for next trade
+5. **Explainability**: All decisions logged to `logs/explain.log` with full context
+
+### Mock Mode (No API Key)
+
+When `OPENAI_API_KEY` is not set, the advisor uses deterministic logic:
+
+- **Bullish signals**: Price above EMA + oversold RSI + strong trend → Higher scores
+- **Bearish signals**: Price below EMA + overbought RSI + weak trend → Lower scores  
+- **Neutral conditions**: Balanced indicators → Medium scores
+
+Perfect for testing and development without API costs.
+
+### Daily Reports
+
+Generate advisor performance reports:
+
+```bash
+# Manual report generation
+python -c "from app.agent.reports import save_daily_report; save_daily_report()"
+
+# Reports saved to reports/ directory:
+# - advisor_daily_YYYY-MM-DD.json (detailed data)
+# - advisor_summary_YYYY-MM-DD.txt (human-readable)
+```
+
+**Report includes:**
+- Average advisor score and filtering rate
+- Top-3 rationales by frequency  
+- Decision acceptance/denial breakdown
+- Advisor effectiveness metrics
+
+### Integration Points
+
+- **Telegram Bot**: `/status` shows latest advisor score and rationale
+- **Web Panel**: Status page displays advisor metrics in real-time
+- **Trading Notifications**: Include advisor score in entry/block alerts
+- **API Endpoints**: `/status` includes `advisorScore`, `advisorRationale`, etc.
+
 ## 🚦 Safety Features
 
 - **DRY_RUN Mode**: Default safe mode with simulated trading
