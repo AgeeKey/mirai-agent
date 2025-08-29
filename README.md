@@ -13,6 +13,8 @@ An advanced trading bot with AI-powered decision making for cryptocurrency futur
 - **Binance Integration**: Native support for Binance UMFutures with strict filters
 - **DRY_RUN Mode**: Safe testing environment with simulated trading
 - **CLI Interface**: Easy-to-use command line interface
+- **Web Panel**: Real-time monitoring and control interface with BasicAuth
+- **Telegram Bot**: Remote monitoring and control via Telegram
 - **Monitoring**: Detailed logging and performance metrics
 
 ## 🏗️ Architecture
@@ -25,17 +27,22 @@ mirai-agent/
 │   │   ├── schema.py      # Pydantic schemas
 │   │   ├── policy.py      # Trading policy and mock LLM
 │   │   └── loop.py        # Main agent loop
-│   └── trader/            # Trading components
-│       ├── binance_client.py   # Binance API client
-│       ├── exchange_info.py    # Exchange filters
-│       └── orders.py           # Order management
+│   ├── trader/            # Trading components
+│   │   ├── binance_client.py   # Binance API client
+│   │   ├── exchange_info.py    # Exchange filters
+│   │   └── orders.py           # Order management
+│   ├── telegram_bot/      # Telegram bot integration
+│   └── web/              # Web panel interface
+│       ├── api.py        # FastAPI REST endpoints
+│       ├── ui.py         # HTML dashboard
+│       └── utils.py      # Shared utilities
 ├── configs/               # Configuration files
 │   ├── logging.yaml       # Logging configuration
 │   ├── risk.yaml         # Risk management settings
 │   └── strategies.yaml   # Trading strategies
 ├── infra/                # Infrastructure code
+│   └── docker-compose.yml # Docker compose config
 ├── logs/                 # Log files
-├── web/                  # Web interface (future)
 └── tests/               # Test suite
 ```
 
@@ -140,6 +147,57 @@ mypy app/
 - **Comprehensive Logging**: Detailed audit trail
 
 ## 📊 Monitoring
+
+### Web Panel
+
+Access the web dashboard for real-time monitoring and control:
+
+```bash
+# Start the web panel
+python app/cli.py web-run
+
+# Custom host/port
+python app/cli.py web-run --host 0.0.0.0 --port 8080
+```
+
+**Features:**
+- Real-time status monitoring with auto-refresh
+- Trading mode control (Advisor/Semi/Auto)
+- Pause/Resume functionality
+- Emergency kill switch for positions
+- BasicAuth protection
+- API metrics and health monitoring
+
+**Environment Variables:**
+```bash
+WEB_USER=admin          # Web panel username
+WEB_PASS=change-me      # Web panel password
+WEB_PORT=8000          # Server port
+```
+
+**Endpoints:**
+- `GET /` - Dashboard UI (requires auth)
+- `GET /status` - Agent status JSON
+- `GET /metrics` - Performance metrics
+- `POST /kill` - Emergency kill switch (requires auth)
+- `POST /mode` - Change trading mode (requires auth)
+- `POST /pause` - Pause agent (requires auth)
+- `POST /resume` - Resume agent (requires auth)
+
+### Docker Deployment
+
+Run with Docker Compose:
+
+```bash
+# Build and start web panel
+cd infra/
+docker compose up -d web
+
+# View logs
+docker compose logs -f web
+```
+
+### Logs
 
 Logs are stored in the `logs/` directory:
 - `mirai-agent.log`: General application logs

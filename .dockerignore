@@ -1,0 +1,27 @@
+# Docker ignore file for Mirai Agent
+.venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv
+.pytest_cache/
+.coverage
+htmlcov/
+logs/
+*.log
+*.db
+state/*.db
+.git/
+.gitignore
+.github/
+README.md
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
