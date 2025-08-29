@@ -288,5 +288,47 @@ def telegram_bot():
         sys.exit(1)
 
 
+@cli.command("web-run")
+@click.option('--host', default='0.0.0.0', help='Host to bind to')
+@click.option('--port', default=8000, type=int, help='Port to bind to')
+def web_run(host, port):
+    """Start the web panel server"""
+    try:
+        import uvicorn
+        from web.api import app
+        
+        # Check for web credentials
+        web_user = os.getenv('WEB_USER')
+        web_pass = os.getenv('WEB_PASS')
+        
+        if not web_user or not web_pass:
+            click.echo("⚠️  WARNING: WEB_USER and/or WEB_PASS not set in environment!")
+            click.echo("   Web interface will return 401 unauthorized.")
+            click.echo("   Set these variables in .env file or environment.")
+            click.echo()
+        
+        url = f"http://{host}:{port}"
+        click.echo(f"🚀 Starting Mirai Web Panel at {url}")
+        click.echo(f"📊 Dashboard: {url}/")
+        click.echo(f"📋 API docs: {url}/docs")
+        
+        if web_user and web_pass:
+            click.echo(f"🔐 Authentication: {web_user}:*****")
+        
+        click.echo("Press Ctrl+C to stop...")
+        
+        uvicorn.run(app, host=host, port=port, log_level="info")
+        
+    except ImportError as e:
+        if "uvicorn" in str(e) or "fastapi" in str(e):
+            click.echo("❌ FastAPI/uvicorn not installed. Install with: pip install fastapi uvicorn[standard]")
+        else:
+            click.echo(f"❌ Import error: {str(e)}")
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"❌ Web server failed: {str(e)}")
+        sys.exit(1)
+
+
 if __name__ == '__main__':
     cli()
