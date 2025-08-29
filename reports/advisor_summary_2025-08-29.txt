@@ -1,0 +1,35 @@
+
+AI ADVISOR DAILY REPORT
+=======================
+Date: 2025-08-29
+Generated: 2025-08-29T02:14:27.958488+00:00
+
+SUMMARY
+-------
+Total Decisions: 9
+Accepted: 5
+Denied: 4
+Average Advisor Score: 0.600
+
+ADVISOR FILTERING
+-----------------
+Filtered by Advisor: 4 (44.4%)
+
+ACTION BREAKDOWN
+----------------
+BUY: 2
+SELL: 0
+HOLD: 7
+
+TOP RATIONALES
+--------------
+1. Score 0.50: neutral trend, neutral RSI, weak trend (Count: 3)
+2. Score 0.65: neutral trend, neutral RSI, strong tre (Count: 2)
+3. Strong bullish momentum (Count: 1)
+
+ADVISOR EFFECTIVENESS
+--------------------
+Gating Rate: 44.4%
+Decision Quality: Fair
+Avg Score (Accepted): 0.630
+Avg Score (Denied): 0.562
