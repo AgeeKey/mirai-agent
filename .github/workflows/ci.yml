@@ -49,6 +49,8 @@ jobs:
         PYTHONPATH: ${{ github.workspace }}
         DRY_RUN: true
         TESTNET: true
+        WEB_USER: testuser
+        WEB_PASS: testpass
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -96,12 +98,5 @@ jobs:
     
     - name: Build Docker image
       run: |
-        echo "FROM python:3.11-slim" > Dockerfile
-        echo "WORKDIR /app" >> Dockerfile
-        echo "COPY requirements.txt ." >> Dockerfile
-        echo "RUN pip install --no-cache-dir -r requirements.txt" >> Dockerfile
-        echo "COPY . ." >> Dockerfile
-        echo "CMD [\"python\", \"app/cli.py\", \"--help\"]" >> Dockerfile
-        
         docker build -t mirai-agent:${{ github.sha }} .
         docker images

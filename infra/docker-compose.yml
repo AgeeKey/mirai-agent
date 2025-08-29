@@ -1,0 +1,52 @@
+# Docker Compose for Mirai Agent
+version: '3.8'
+
+services:
+  web:
+    build: 
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - WEB_USER=${WEB_USER:-admin}
+      - WEB_PASS=${WEB_PASS:-change-me}
+      - WEB_PORT=8000
+      - DRY_RUN=${DRY_RUN:-true}
+      - TESTNET=${TESTNET:-true}
+    env_file:
+      - ../.env
+    volumes:
+      - ../state:/app/state
+      - ../logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Telegram bot service (commented out by default)
+  # telegram:
+  #   build: 
+  #     context: ..
+  #     dockerfile: Dockerfile
+  #   command: ["python", "app/cli.py", "telegram-bot"]
+  #   environment:
+  #     - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+  #     - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+  #     - DRY_RUN=${DRY_RUN:-true}
+  #     - TESTNET=${TESTNET:-true}
+  #   env_file:
+  #     - ../.env
+  #   volumes:
+  #     - ../state:/app/state
+  #     - ../logs:/app/logs
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - web
+
+networks:
+  default:
+    name: mirai-network
