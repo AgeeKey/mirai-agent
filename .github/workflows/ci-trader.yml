@@ -1,0 +1,20 @@
+name: CI Trader
+on:
+  push: { paths: ["app/trader/**"] }
+  pull_request: { paths: ["app/trader/**"] }
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -U pip
+      - run: pip install -e app/trader[dev]
+      - run: ruff app/trader && mypy app/trader
+      - run: pytest -q app/trader/tests
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: app/trader
+          push: false
