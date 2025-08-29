@@ -1,0 +1,13 @@
+[project]
+name = "mirai-trader"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = []
+[project.optional-dependencies]
+dev = ["pytest>=8.2.0","ruff>=0.5.0","mypy>=1.10.0"]
+[tool.ruff]
+line-length = 100
+[tool.ruff.lint]
+select = ["E","F","I"]
+[tool.mypy]
+python_version = "3.11"
