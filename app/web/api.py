@@ -76,10 +76,10 @@ async def kill_switch(request: KillRequest, authorized: bool = Depends(verify_cr
         order_manager = OrderManager(client)
 
         # Cancel all orders
-        cancel_result = order_manager.cancel_all_orders(symbol)
+        order_manager.cancel_all_orders(symbol)
 
         # Close position
-        close_result = order_manager.close_position(symbol)
+        order_manager.close_position(symbol)
 
         return {
             "success": True,

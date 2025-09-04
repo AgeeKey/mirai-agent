@@ -4,7 +4,7 @@ Binance UMFutures client with DRY_RUN mode support
 
 import logging
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, Optional
 
 try:
@@ -70,7 +70,7 @@ class BinanceClient:
             logger.error(f"Connection test failed: {str(e)}")
             return False
 
-    def get_market_data(self, symbol: str) -> Dict[str, Any]:
+    def get_market_data(self, symbol: str) -> dict[str, Any]:
         """Get current market data for symbol"""
         if self.dry_run:
             # Return simulated market data
@@ -84,7 +84,7 @@ class BinanceClient:
                 "price": round(current_price, 2),
                 "volume": round(random.uniform(1000, 50000), 2),
                 "change_24h": round(random.uniform(-0.1, 0.1), 4),
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
 
         if not self.client:
@@ -99,13 +99,13 @@ class BinanceClient:
                 "price": float(ticker["lastPrice"]),
                 "volume": float(ticker["volume"]),
                 "change_24h": float(ticker["priceChangePercent"]) / 100,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
         except Exception as e:
             logger.error(f"Error fetching market data: {str(e)}")
             raise
 
-    def get_account_info(self) -> Dict[str, Any]:
+    def get_account_info(self) -> dict[str, Any]:
         """Get account information"""
         if self.dry_run:
             return {
@@ -131,10 +131,10 @@ class BinanceClient:
         side: str,
         quantity: float,
         order_type: str = "MARKET",
-        price: Optional[float] = None,
-        stop_loss: Optional[float] = None,
-        take_profit: Optional[float] = None,
-    ) -> Dict[str, Any]:
+        price: float | None = None,
+        stop_loss: float | None = None,
+        take_profit: float | None = None,
+    ) -> dict[str, Any]:
         """
         Place an order with proper filters and risk management
         """
@@ -152,7 +152,7 @@ class BinanceClient:
 
         if self.dry_run:
             # Simulate order execution
-            order_id = f"DRY_RUN_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+            order_id = f"DRY_RUN_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
 
             result = {
                 "orderId": order_id,
@@ -162,7 +162,7 @@ class BinanceClient:
                 "quantity": quantity,
                 "status": "FILLED",
                 "price": price or "MARKET",
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "dry_run": True,
             }
 
@@ -210,8 +210,8 @@ class BinanceClient:
         symbol: str,
         side: str,
         quantity: float,
-        stop_loss: Optional[float] = None,
-        take_profit: Optional[float] = None,
+        stop_loss: float | None = None,
+        take_profit: float | None = None,
     ):
         """Place stop loss and take profit orders"""
         if not self.client:
@@ -260,7 +260,7 @@ class BinanceClient:
             logger.error(f"Error fetching positions: {str(e)}")
             raise
 
-    def get_open_orders(self, symbol: Optional[str] = None) -> list:
+    def get_open_orders(self, symbol: str | None = None) -> list:
         """Get all open orders, optionally filtered by symbol"""
         if self.dry_run:
             # Return simulated open orders
@@ -278,7 +278,7 @@ class BinanceClient:
             logger.error(f"Error fetching open orders: {str(e)}")
             raise
 
-    def cancel_all_orders(self, symbol: str) -> Dict[str, Any]:
+    def cancel_all_orders(self, symbol: str) -> dict[str, Any]:
         """Cancel all open orders for a symbol"""
         logger.info(f"Cancelling all orders for {symbol}")
 
@@ -301,7 +301,7 @@ class BinanceClient:
             logger.error(f"Error cancelling all orders for {symbol}: {str(e)}")
             raise
 
-    def close_position(self, symbol: str) -> Dict[str, Any]:
+    def close_position(self, symbol: str) -> dict[str, Any]:
         """Close open position with MARKET order (reduceOnly)"""
         logger.info(f"Closing position for {symbol}")
 

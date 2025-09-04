@@ -2,8 +2,8 @@
 """
 Telegram Bot for Mirai Agent - Real-time trading notifications and control
 """
+
 import asyncio
-import json
 import logging
 import os
 import sys
@@ -93,8 +93,8 @@ class TelegramNotifier:
         symbol: str,
         side: str,
         qty: float,
-        sl: Optional[float],
-        tp: Optional[float],
+        sl: float | None,
+        tp: float | None,
         rationale: str,
     ):
         """Notify about new trade entry"""
@@ -135,7 +135,7 @@ class TelegramBot:
     Main Telegram bot class for Mirai Agent control and monitoring
     """
 
-    def __init__(self, token: str, chat_id: str, agent_loop: Optional[AgentLoop] = None):
+    def __init__(self, token: str, chat_id: str, agent_loop: AgentLoop | None = None):
         self.token = token
         self.chat_id = chat_id
         self.agent_loop = agent_loop
@@ -193,21 +193,19 @@ class TelegramBot:
                 ],  # Truncate for display
             }
 
-            formatted_json = json.dumps(status_data, indent=2)
-
             # Create more readable message
             message = f"""📊 *Agent Status*
 
 💰 Day PnL: `{status_data['day_pnl']:.2f}`
 📈 Max Day PnL: `{status_data['max_day_pnl']:.2f}`
 📊 Trades Today: `{status_data['trades_today']}`
-❌ Consecutive Losses: `{status_data['consecutive_losses']}`
+❌ Consecutive Losses: ```{status_data['consecutive_losses']}`
 🏪 Open Positions: `{status_data['open_positions']}`
 🎯 Trading Mode: `{status_data['trading_mode']}`
 ⏸️ Agent Paused: `{status_data['agent_paused']}`
 
 🤖 *AI Advisor*
-Score: `{status_data['last_score']:.3f}`
+Score: `e: `e: `{status_data['last_score']:.3f}`
 Rationale: _{status_data['last_rationale']}_
 
 Use /mode <advisor|semi|auto> to change mode"""
@@ -264,10 +262,10 @@ Use /mode <advisor|semi|auto> to change mode"""
                 order_manager = OrderManager(client)
 
                 # Cancel all orders
-                cancel_result = order_manager.cancel_all_orders(symbol)
+                order_manager.cancel_all_orders(symbol)
 
                 # Close position
-                close_result = order_manager.close_position(symbol)
+                order_manager.close_position(symbol)
 
                 message = f"💥 *Kill Switch Executed*\nSymbol: `{symbol}`\n✅ Orders cancelled\n✅ Position closed"
 
@@ -334,7 +332,7 @@ Use /mode <advisor|semi|auto> to change mode"""
         asyncio.run(self.start_polling())
 
 
-def create_notifier_from_env() -> Optional[TelegramNotifier]:
+def create_notifier_from_env() -> TelegramNotifier | None:
     """Create a TelegramNotifier from environment variables"""
     token = os.getenv("TELEGRAM_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
@@ -346,7 +344,7 @@ def create_notifier_from_env() -> Optional[TelegramNotifier]:
     return TelegramNotifier(token, chat_id)
 
 
-def create_bot_from_env(agent_loop: Optional[AgentLoop] = None) -> Optional[TelegramBot]:
+def create_bot_from_env(agent_loop: AgentLoop | None = None) -> TelegramBot | None:
     """Create a TelegramBot from environment variables"""
     token = os.getenv("TELEGRAM_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")

@@ -41,7 +41,7 @@ class ExchangeInfo:
             },
         }
 
-    def get_symbol_filters(self, symbol: str) -> Dict[str, str]:
+    def get_symbol_filters(self, symbol: str) -> dict[str, str]:
         """Get trading filters for a symbol"""
         if symbol not in self.trading_filters:
             # Use BTCUSDT defaults for unknown symbols
@@ -132,8 +132,8 @@ class ExchangeInfo:
         return True
 
     def validate_order_params(
-        self, symbol: str, quantity: float, price: Optional[float] = None
-    ) -> Dict[str, Any]:
+        self, symbol: str, quantity: float, price: float | None = None
+    ) -> dict[str, Any]:
         """
         Validate and adjust all order parameters according to exchange filters
         """

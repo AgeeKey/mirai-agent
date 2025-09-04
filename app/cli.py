@@ -2,6 +2,7 @@
 """
 Mirai Agent CLI - Trading agent command line interface
 """
+
 import logging
 import logging.config
 import os
@@ -23,7 +24,7 @@ def setup_logging():
     """Setup logging configuration"""
     config_path = Path(__file__).parent.parent / "configs" / "logging.yaml"
     if config_path.exists():
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             config = yaml.safe_load(f)
             logging.config.dictConfig(config)
     else:
@@ -69,7 +70,7 @@ def dry_run_check(config, dry_run):
         # Load strategy config
         config_path = Path(config)
         if config_path.exists():
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 strategies = yaml.safe_load(f)
             click.echo(f"📋 Loaded {len(strategies.get('strategies', []))} strategies")
         else:

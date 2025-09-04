@@ -2,7 +2,7 @@
 Tests for the agent module
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import Mock, patch
 
 from app.agent.loop import AgentLoop
@@ -27,7 +27,7 @@ class TestAgentSchemas:
             price=45000.0,
             volume=1000000.0,
             change_24h=0.05,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
         )
         assert market_data.symbol == "BTCUSDT"
         assert market_data.price == 45000.0
@@ -44,7 +44,7 @@ class TestMockLLMPolicy:
             price=45000.0,
             volume=1000000.0,
             change_24h=0.05,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
         )
 
         decision = self.policy.analyze_market(market_data)

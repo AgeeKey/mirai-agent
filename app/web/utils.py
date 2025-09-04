@@ -35,7 +35,7 @@ _agent_state = {
 }
 
 
-def get_agent_state() -> Dict[str, Any]:
+def get_agent_state() -> dict[str, Any]:
     """Get the global agent state"""
     import time
 
@@ -66,7 +66,7 @@ def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)) ->
     return True
 
 
-def get_safe_status_data() -> Dict[str, Any]:
+def get_safe_status_data() -> dict[str, Any]:
     """Get status data with safe fallbacks"""
     agent_state = get_agent_state()
 

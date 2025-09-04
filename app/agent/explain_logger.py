@@ -39,8 +39,8 @@ class ExplainabilityLogger:
         strategy: str,
         rationale: str,
         accepted: bool,
-        deny_reason: Optional[str] = None,
-        additional_context: Optional[Dict[str, Any]] = None,
+        deny_reason: str | None = None,
+        additional_context: dict[str, Any] | None = None,
     ):
         """
         Log a trading decision with full context
@@ -96,7 +96,7 @@ class ExplainabilityLogger:
             if not self.log_path.exists():
                 return decisions
 
-            with open(self.log_path, "r", encoding="utf-8") as f:
+            with open(self.log_path, encoding="utf-8") as f:
                 lines = f.readlines()
 
             # Get the last N lines
@@ -116,7 +116,7 @@ class ExplainabilityLogger:
 
         return decisions
 
-    def get_daily_stats(self, date_str: Optional[str] = None) -> Dict[str, Any]:
+    def get_daily_stats(self, date_str: str | None = None) -> dict[str, Any]:
         """
         Get daily statistics from the explain log
 
@@ -208,7 +208,7 @@ def log_decision(
     strategy: str,
     rationale: str,
     accepted: bool,
-    deny_reason: Optional[str] = None,
+    deny_reason: str | None = None,
     **kwargs,
 ):
     """

@@ -11,7 +11,7 @@ import yaml
 logger = logging.getLogger(__name__)
 
 
-def load_advisor_config(config_path: str = "configs/risk.yaml") -> Dict[str, Any]:
+def load_advisor_config(config_path: str = "configs/risk.yaml") -> dict[str, Any]:
     """
     Load advisor configuration from YAML file
 
@@ -27,7 +27,7 @@ def load_advisor_config(config_path: str = "configs/risk.yaml") -> Dict[str, Any
             logger.warning(f"Config file {config_path} not found, using defaults")
             return get_default_advisor_config()
 
-        with open(config_file, "r") as f:
+        with open(config_file) as f:
             config = yaml.safe_load(f)
 
         advisor_config = config.get("advisor", {})
@@ -48,6 +48,6 @@ def load_advisor_config(config_path: str = "configs/risk.yaml") -> Dict[str, Any
         return get_default_advisor_config()
 
 
-def get_default_advisor_config() -> Dict[str, Any]:
+def get_default_advisor_config() -> dict[str, Any]:
     """Get default advisor configuration"""
     return {"ADVISOR_THRESHOLD": 0.70, "RECOVERY_THRESHOLD": 0.80, "RECOVERY_MAX_TRIES": 3}

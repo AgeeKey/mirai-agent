@@ -153,7 +153,7 @@ class TestExplainabilityLogger:
     def test_logger_creation(self, tmp_path):
         """Test logger creation and file handling"""
         log_file = tmp_path / "test_explain.log"
-        logger = ExplainabilityLogger(str(log_file))
+        ExplainabilityLogger(str(log_file))
 
         assert log_file.parent.exists()
 

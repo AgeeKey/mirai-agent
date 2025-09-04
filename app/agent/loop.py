@@ -5,7 +5,7 @@ Main agent loop for trading decisions
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from typing import Any, Dict
 
 # Add the app directory to the Python path for CLI usage
@@ -50,7 +50,7 @@ class AgentLoop:
 
         logger.info(f"AgentLoop initialized with advisor config: {self.advisor_config}")
 
-    def _build_market_features(self, market_data: MarketData) -> Dict[str, Any]:
+    def _build_market_features(self, market_data: MarketData) -> dict[str, Any]:
         """
         Build market features for advisor analysis
 
@@ -137,21 +137,30 @@ class AgentLoop:
                 if self.recovery_tries >= self.advisor_config["RECOVERY_MAX_TRIES"]:
                     return (
                         False,
-                        f"recovery_max_tries_exceeded ({self.recovery_tries}/{self.advisor_config['RECOVERY_MAX_TRIES']})",
+                        (
+                            f"recovery_max_tries_exceeded "
+                            f"({self.recovery_tries}/{self.advisor_config['RECOVERY_MAX_TRIES']})"
+                        ),
                     )
 
                 # Check if score meets recovery threshold
                 if advisor_score < self.advisor_config["RECOVERY_THRESHOLD"]:
                     return (
                         False,
-                        f"recovery_score_too_low ({advisor_score:.3f} < {self.advisor_config['RECOVERY_THRESHOLD']})",
+                        (
+                            f"recovery_score_too_low "
+                            f"({advisor_score:.3f} < {self.advisor_config['RECOVERY_THRESHOLD']})"
+                        ),
                     )
 
                 # Recovery conditions met
                 self.recovery_tries += 1
                 return (
                     True,
-                    f"recovery_allowed ({self.recovery_tries}/{self.advisor_config['RECOVERY_MAX_TRIES']})",
+                    (
+                        f"recovery_allowed "
+                        f"({self.recovery_tries}/{self.advisor_config['RECOVERY_MAX_TRIES']})"
+                    ),
                 )
 
         except Exception as e:
@@ -160,7 +169,7 @@ class AgentLoop:
 
         return True, "recovery_check_default"
 
-    def make_decision(self, symbol: str = "BTCUSDT") -> Dict[str, Any]:
+    def make_decision(self, symbol: str = "BTCUSDT") -> dict[str, Any]:
         """
         Make a trading decision for the given symbol
         """
@@ -174,7 +183,7 @@ class AgentLoop:
                 "rationale": "Agent is paused",
                 "intent": "HOLD",
                 "action": "HOLD",
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "symbol": symbol,
             }
 
@@ -186,7 +195,7 @@ class AgentLoop:
                 price=float(market_data_dict.get("price", 0)),
                 volume=float(market_data_dict.get("volume", 0)),
                 change_24h=float(market_data_dict.get("change_24h", 0)),
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(UTC),
             )
 
             # Build features for advisor
@@ -289,8 +298,8 @@ class AgentLoop:
                 final_rationale = final_decision.rationale
 
             # Store decision in history with advisor info
-            decision_dict = final_decision.dict()
-            decision_dict["timestamp"] = datetime.utcnow().isoformat()
+            decision_dict = final_decision.model_dump()
+            decision_dict["timestamp"] = datetime.now(UTC).isoformat()
             decision_dict["symbol"] = symbol
             decision_dict["advisor_score"] = advisor_result["score"]
             decision_dict["advisor_rationale"] = advisor_result["rationale"]
@@ -309,7 +318,7 @@ class AgentLoop:
                 "rationale": f"Error in decision making: {str(e)}",
                 "intent": "HOLD",
                 "action": "HOLD",
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "symbol": symbol,
                 "advisor_score": 0.0,
                 "advisor_rationale": "Error occurred",
@@ -317,7 +326,7 @@ class AgentLoop:
                 "advisor_action": "HOLD",
             }
 
-    def execute_action(self, decision: Dict[str, Any], symbol: str) -> Dict[str, Any]:
+    def execute_action(self, decision: dict[str, Any], symbol: str) -> dict[str, Any]:
         """
         Execute the trading action based on the decision
         """
@@ -423,7 +432,7 @@ class AgentLoop:
             logger.error(f"Error executing action: {str(e)}")
             return {"status": "error", "message": str(e)}
 
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """
         Calculate performance metrics
         """
@@ -460,7 +469,7 @@ class AgentLoop:
             "recovery_tries": self.recovery_tries,
         }
 
-    def get_advisor_state(self) -> Dict[str, Any]:
+    def get_advisor_state(self) -> dict[str, Any]:
         """
         Get current advisor state for status endpoints
 

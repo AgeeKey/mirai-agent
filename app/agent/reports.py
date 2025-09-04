@@ -30,7 +30,7 @@ class AdvisorReports:
         self.reports_dir.mkdir(parents=True, exist_ok=True)
         self.explain_logger = get_explain_logger()
 
-    def generate_daily_report(self, date_str: str = None) -> Dict[str, Any]:
+    def generate_daily_report(self, date_str: str = None) -> dict[str, Any]:
         """
         Generate daily advisor report
 
@@ -102,7 +102,7 @@ class AdvisorReports:
 
         return report_file
 
-    def _save_human_readable_summary(self, report: Dict[str, Any], date_str: str):
+    def _save_human_readable_summary(self, report: dict[str, Any], date_str: str):
         """Save a human-readable summary of the report"""
         summary_file = self.reports_dir / f"advisor_summary_{date_str}.txt"
 
@@ -115,7 +115,7 @@ class AdvisorReports:
         except Exception as e:
             logger.warning(f"Failed to save human-readable summary: {e}")
 
-    def _format_human_readable_summary(self, report: Dict[str, Any]) -> str:
+    def _format_human_readable_summary(self, report: dict[str, Any]) -> str:
         """Format report as human-readable text"""
         summary = report["summary"]
 
@@ -156,7 +156,7 @@ ACTION BREAKDOWN
 
         return text
 
-    def _analyze_advisor_effectiveness(self, daily_stats: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_advisor_effectiveness(self, daily_stats: dict[str, Any]) -> dict[str, Any]:
         """Analyze advisor effectiveness metrics"""
         total = daily_stats["total_decisions"]
         filtered = daily_stats["filtered_by_advisor"]
@@ -187,7 +187,7 @@ ACTION BREAKDOWN
             ),
         }
 
-    def _assess_decision_quality(self, daily_stats: Dict[str, Any]) -> str:
+    def _assess_decision_quality(self, daily_stats: dict[str, Any]) -> str:
         """Assess the quality of advisor decisions"""
         avg_score = daily_stats["avg_score"]
         filtered_percent = self._calculate_percentage(
@@ -207,7 +207,7 @@ ACTION BREAKDOWN
         """Calculate percentage with safe division"""
         return (part / total * 100) if total > 0 else 0.0
 
-    def get_weekly_summary(self, end_date: str = None) -> Dict[str, Any]:
+    def get_weekly_summary(self, end_date: str = None) -> dict[str, Any]:
         """
         Get weekly summary of advisor performance
 
@@ -246,7 +246,7 @@ def get_reports_generator() -> AdvisorReports:
     return _reports_instance
 
 
-def generate_daily_report(date_str: str = None) -> Dict[str, Any]:
+def generate_daily_report(date_str: str = None) -> dict[str, Any]:
     """
     Convenience function to generate daily report
 

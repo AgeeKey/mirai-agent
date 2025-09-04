@@ -2,7 +2,7 @@
 Tests for Telegram Bot functionality
 """
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from app.agent.loop import AgentLoop
 from app.telegram_bot.bot import (
@@ -98,16 +98,20 @@ class TestTelegramBot:
         """Test bot creation with configuration"""
         with patch("app.telegram_bot.bot.TELEGRAM_AVAILABLE", True):
             with patch("app.telegram_bot.bot.Application") as mock_app_class:
-                mock_app = Mock()
-                mock_builder = Mock()
-                mock_builder.token.return_value = mock_builder
-                mock_builder.build.return_value = mock_app
-                mock_app_class.builder.return_value = mock_builder
+                with patch(
+                    "app.telegram_bot.bot.TelegramNotifier.send_message",
+                    new_callable=AsyncMock,
+                ):
+                    mock_app = Mock()
+                    mock_builder = Mock()
+                    mock_builder.token.return_value = mock_builder
+                    mock_builder.build.return_value = mock_app
+                    mock_app_class.builder.return_value = mock_builder
 
-                bot = TelegramBot("fake_token", "fake_chat_id", None)
-                assert bot._enabled
-                assert bot.token == "fake_token"
-                assert bot.chat_id == "fake_chat_id"
+                    bot = TelegramBot("fake_token", "fake_chat_id", None)
+                    assert bot._enabled
+                    assert bot.token == "fake_token"
+                    assert bot.chat_id == "fake_chat_id"
 
     def test_command_handlers_setup(self):
         """Test that command handlers are properly set up"""
@@ -119,7 +123,7 @@ class TestTelegramBot:
                 mock_builder.build.return_value = mock_app
                 mock_app_class.builder.return_value = mock_builder
 
-                bot = TelegramBot("fake_token", "fake_chat_id", None)
+                TelegramBot("fake_token", "fake_chat_id", None)
 
                 # Verify handlers were added
                 assert mock_app.add_handler.call_count == 5  # 5 commands
@@ -240,7 +244,7 @@ class TestIntegrationWithAgentLoop:
 
             # Execute the action if it's not HOLD
             if decision["action"] != "HOLD":
-                result = agent_loop.execute_action(decision, "BTCUSDT")
+                agent_loop.execute_action(decision, "BTCUSDT")
 
                 # Verify notifier was called for entry
                 mock_notifier.notify_entry.assert_called()

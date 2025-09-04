@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class SignalAdvisor:
     """AI-powered trading signal advisor"""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         """
         Initialize the advisor with optional OpenAI API key
 
@@ -39,7 +39,7 @@ class SignalAdvisor:
         else:
             logger.info("SignalAdvisor initialized with deterministic mock (no OpenAI key)")
 
-    def get_signal_score(self, features: Dict[str, Any]) -> Dict[str, Any]:
+    def get_signal_score(self, features: dict[str, Any]) -> dict[str, Any]:
         """
         Analyze market features and return trading signal score
 
@@ -59,7 +59,7 @@ class SignalAdvisor:
         else:
             return self._get_mock_signal_score(features)
 
-    def _get_openai_signal_score(self, features: Dict[str, Any]) -> Dict[str, Any]:
+    def _get_openai_signal_score(self, features: dict[str, Any]) -> dict[str, Any]:
         """Get signal score using OpenAI GPT"""
         try:
             # Prepare the prompt with market features
@@ -70,7 +70,10 @@ class SignalAdvisor:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert trading advisor. Analyze the provided market data and return a JSON response with trading recommendations.",
+                        "content": (
+                            "You are an expert trading advisor. Analyze the provided market data "
+                            "and return a JSON response with trading recommendations."
+                        ),
                     },
                     {"role": "user", "content": prompt},
                 ],
@@ -92,7 +95,7 @@ class SignalAdvisor:
             logger.error(f"OpenAI API error: {e}")
             return self._get_fallback_response(f"OpenAI API error: {str(e)}")
 
-    def _get_mock_signal_score(self, features: Dict[str, Any]) -> Dict[str, Any]:
+    def _get_mock_signal_score(self, features: dict[str, Any]) -> dict[str, Any]:
         """Deterministic mock for testing and fallback"""
         # Extract key indicators with safe defaults
         price = features.get("price", 50000.0)
@@ -167,7 +170,7 @@ class SignalAdvisor:
             "action": action,
         }
 
-    def _build_analysis_prompt(self, features: Dict[str, Any]) -> str:
+    def _build_analysis_prompt(self, features: dict[str, Any]) -> str:
         """Build analysis prompt for OpenAI"""
         return f"""
         Analyze the following market data and provide a trading recommendation:
@@ -195,7 +198,7 @@ class SignalAdvisor:
         - Be conservative in uncertain conditions
         """
 
-    def _validate_and_normalize_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_and_normalize_response(self, response: dict[str, Any]) -> dict[str, Any]:
         """Validate and normalize API response"""
         # Ensure all required fields exist
         score = float(response.get("score", 0.5))
@@ -217,7 +220,7 @@ class SignalAdvisor:
             "action": action,
         }
 
-    def _get_fallback_response(self, error_reason: str) -> Dict[str, Any]:
+    def _get_fallback_response(self, error_reason: str) -> dict[str, Any]:
         """Return safe fallback response on error"""
         return {
             "score": 0.5,
@@ -231,7 +234,7 @@ class SignalAdvisor:
 _advisor_instance = None
 
 
-def get_signal_score(features: Dict[str, Any]) -> Dict[str, Any]:
+def get_signal_score(features: dict[str, Any]) -> dict[str, Any]:
     """
     Global function to get signal score - maintains singleton advisor instance
 

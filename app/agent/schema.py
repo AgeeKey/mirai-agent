@@ -5,7 +5,7 @@ Pydantic schemas for the trading agent
 from datetime import datetime
 from typing import Any, Dict, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class MarketData(BaseModel):
@@ -27,13 +27,12 @@ class AgentDecision(BaseModel):
     action: Literal["MARKET_BUY", "MARKET_SELL", "LIMIT_BUY", "LIMIT_SELL", "HOLD"] = Field(
         ..., description="Specific action to take"
     )
-    target_price: Optional[float] = Field(None, description="Target price for limit orders")
-    stop_loss: Optional[float] = Field(None, description="Stop loss price")
-    take_profit: Optional[float] = Field(None, description="Take profit price")
-    quantity: Optional[float] = Field(None, description="Trade quantity")
+    target_price: float | None = Field(None, description="Target price for limit orders")
+    stop_loss: float | None = Field(None, description="Stop loss price")
+    take_profit: float | None = Field(None, description="Take profit price")
+    quantity: float | None = Field(None, description="Trade quantity")
 
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(extra="forbid")
 
 
 class RiskParameters(BaseModel):
@@ -44,8 +43,7 @@ class RiskParameters(BaseModel):
     stop_loss_percent: float = Field(default=0.02, gt=0, le=1)
     take_profit_percent: float = Field(default=0.04, gt=0, le=1)
 
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(extra="forbid")
 
 
 class TradingSignal(BaseModel):
@@ -53,7 +51,7 @@ class TradingSignal(BaseModel):
 
     signal_type: Literal["BUY", "SELL", "HOLD"]
     strength: float = Field(..., ge=0, le=1)
-    indicators: Dict[str, Any] = Field(default_factory=dict)
+    indicators: dict[str, Any] = Field(default_factory=dict)
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 

@@ -160,7 +160,7 @@ HTML_TEMPLATE = """
         async function fetchStatus() {
             try {
                 const response = await fetch('/status');
-                const data = await response.json();
+                const data = await response.model_dump_json();
                 updateStatusDisplay(data);
                 document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
                 return data;
@@ -222,7 +222,7 @@ HTML_TEMPLATE = """
         async function pauseAgent() {
             try {
                 const response = await fetch('/pause', { method: 'POST' });
-                const result = await response.json();
+                const result = await response.model_dump_json();
                 if (result.success) {
                     alert('✅ Agent paused successfully');
                     fetchStatus();
@@ -237,7 +237,7 @@ HTML_TEMPLATE = """
         async function resumeAgent() {
             try {
                 const response = await fetch('/resume', { method: 'POST' });
-                const result = await response.json();
+                const result = await response.model_dump_json();
                 if (result.success) {
                     alert('✅ Agent resumed successfully');
                     fetchStatus();
@@ -257,7 +257,7 @@ HTML_TEMPLATE = """
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ mode: mode })
                 });
-                const result = await response.json();
+                const result = await response.model_dump_json();
                 if (result.success) {
                     alert(`✅ Mode changed to ${mode}`);
                     fetchStatus();
@@ -286,7 +286,7 @@ HTML_TEMPLATE = """
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ symbol: symbol })
                 });
-                const result = await response.json();
+                const result = await response.model_dump_json();
                 if (result.success) {
                     alert(`💀 Kill switch executed for ${symbol}`);
                     fetchStatus();

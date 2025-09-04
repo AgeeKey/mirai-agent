@@ -3,7 +3,7 @@ Order management with unified MARKET+SL/TP functionality
 """
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -50,9 +50,9 @@ class OrderManager:
         symbol: str,
         side: str,
         quantity: float,
-        stop_loss_price: Optional[float] = None,
-        take_profit_price: Optional[float] = None,
-    ) -> Dict[str, Any]:
+        stop_loss_price: float | None = None,
+        take_profit_price: float | None = None,
+    ) -> dict[str, Any]:
         """
         Place a market order with automatic stop loss and take profit orders
         This is the unified MARKET+SL/TP functionality
@@ -78,14 +78,14 @@ class OrderManager:
 
             # Store the order
             order_id = market_order.get(
-                "orderId", f"DRY_RUN_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+                "orderId", f"DRY_RUN_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
             )
             self.active_orders[order_id] = {
                 "symbol": symbol,
                 "side": side,
                 "quantity": adjusted_quantity,
                 "type": "MARKET_WITH_SLTP",
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(UTC),
                 "main_order": market_order,
             }
 
@@ -132,7 +132,7 @@ class OrderManager:
 
     def _place_stop_loss(
         self, symbol: str, original_side: str, quantity: float, stop_price: float
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Place a stop loss order"""
         # Stop loss side is opposite to original order
         sl_side = (
@@ -153,7 +153,7 @@ class OrderManager:
 
     def _place_take_profit(
         self, symbol: str, original_side: str, quantity: float, tp_price: float
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Place a take profit order"""
         # Take profit side is opposite to original order
         tp_side = (
@@ -174,7 +174,7 @@ class OrderManager:
 
     def place_limit_order(
         self, symbol: str, side: str, quantity: float, price: float
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Place a limit order"""
         logger.info(f"Placing limit order: {side} {quantity} {symbol} at {price}")
 
@@ -192,7 +192,7 @@ class OrderManager:
 
             # Store the order
             order_id = order.get(
-                "orderId", f"DRY_RUN_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+                "orderId", f"DRY_RUN_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
             )
             self.active_orders[order_id] = {
                 "symbol": symbol,
@@ -200,7 +200,7 @@ class OrderManager:
                 "quantity": validated_params["quantity"],
                 "price": validated_params["price"],
                 "type": "LIMIT",
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(UTC),
                 "order": order,
             }
 
@@ -211,7 +211,7 @@ class OrderManager:
             logger.error(f"Error placing limit order: {str(e)}")
             raise
 
-    def cancel_order(self, symbol: str, order_id: str) -> Dict[str, Any]:
+    def cancel_order(self, symbol: str, order_id: str) -> dict[str, Any]:
         """Cancel an active order"""
         if self.client.dry_run:
             # Simulate order cancellation
@@ -238,7 +238,7 @@ class OrderManager:
             logger.error(f"Error canceling order: {str(e)}")
             raise
 
-    def get_order_status(self, symbol: str, order_id: str) -> Dict[str, Any]:
+    def get_order_status(self, symbol: str, order_id: str) -> dict[str, Any]:
         """Get the status of a specific order"""
         if self.client.dry_run:
             if order_id in self.active_orders:
@@ -261,13 +261,13 @@ class OrderManager:
             logger.error(f"Error querying order status: {str(e)}")
             raise
 
-    def get_active_orders(self, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_active_orders(self, symbol: str | None = None) -> list[dict[str, Any]]:
         """Get all active orders, optionally filtered by symbol"""
         if symbol:
             return [order for order in self.active_orders.values() if order["symbol"] == symbol]
         return list(self.active_orders.values())
 
-    def get_order_history(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_order_history(self, limit: int = 50) -> list[dict[str, Any]]:
         """Get order history"""
         return self.order_history[-limit:]
 
@@ -294,15 +294,15 @@ class OrderManager:
 
         return validated_params["quantity"]
 
-    def cancel_all_orders(self, symbol: str) -> Dict[str, Any]:
+    def cancel_all_orders(self, symbol: str) -> dict[str, Any]:
         """Cancel all open orders for a symbol"""
         return self.client.cancel_all_orders(symbol)
 
-    def close_position(self, symbol: str) -> Dict[str, Any]:
+    def close_position(self, symbol: str) -> dict[str, Any]:
         """Close open position with MARKET order (reduceOnly)"""
         return self.client.close_position(symbol)
 
-    def sanity_trade(self, symbol: str = "BTCUSDT") -> Dict[str, Any]:
+    def sanity_trade(self, symbol: str = "BTCUSDT") -> dict[str, Any]:
         """
         Place a sanity trade: tiny MARKET order with SL and TP
         Normalized to filters (tickSize/stepSize/minQty)
@@ -365,7 +365,6 @@ def validate_and_round_qty(
         # Get exchange filters
         filters = exchange_info.get_symbol_filters(symbol)
         min_qty = float(filters["minQty"])
-        step_size = float(filters["stepSize"])
         min_notional = float(filters["minNotional"])
 
         # Calculate quantity by stop loss (risk-based sizing)

@@ -23,7 +23,7 @@ class DayState:
     max_day_pnl: float
     trades_today: int
     consecutive_losses: int
-    cooldown_until: Optional[str] = None
+    cooldown_until: str | None = None
 
 
 class RiskEngine:
@@ -37,10 +37,10 @@ class RiskEngine:
         self.config = self._load_config()
         self._init_database()
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """Load risk configuration from YAML file"""
         try:
-            with open(self.config_path, "r") as f:
+            with open(self.config_path) as f:
                 config = yaml.safe_load(f)
                 return config.get("risk_engine", {})
         except Exception as e:
@@ -142,8 +142,8 @@ class RiskEngine:
                 return new_state
 
     def allow_entry(
-        self, now_utc: datetime, symbol: str, account_state: Dict[str, Any] = None
-    ) -> Tuple[bool, str]:
+        self, now_utc: datetime, symbol: str, account_state: dict[str, Any] = None
+    ) -> tuple[bool, str]:
         """
         Check if entry is allowed based on risk gates
         Returns (allowed, reason)
@@ -189,7 +189,7 @@ class RiskEngine:
 
         return True, "Entry allowed"
 
-    def _has_open_position(self, symbol: str, account_state: Dict[str, Any]) -> bool:
+    def _has_open_position(self, symbol: str, account_state: dict[str, Any]) -> bool:
         """Check if there's already an open position for the symbol"""
         # Check account state for open positions
         positions = account_state.get("positions", [])
