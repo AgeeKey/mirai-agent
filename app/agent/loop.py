@@ -6,7 +6,7 @@ import logging
 import os
 import sys
 from datetime import UTC, datetime, timezone
-from typing import Any, Dict
+from typing import Any
 
 # Add the app directory to the Python path for CLI usage
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

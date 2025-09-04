@@ -4,7 +4,7 @@ Exchange information and trading filters for Binance UMFutures
 
 import logging
 from decimal import ROUND_DOWN, Decimal
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

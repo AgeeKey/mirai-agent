@@ -8,7 +8,7 @@ or a deterministic mock for testing/fallback scenarios.
 import json
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 try:
     import openai

@@ -9,7 +9,7 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from .explain_logger import get_explain_logger
 

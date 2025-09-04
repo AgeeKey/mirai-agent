@@ -4,7 +4,7 @@ Configuration utilities for loading advisor and risk settings
 
 import logging
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import yaml
 

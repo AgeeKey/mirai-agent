@@ -7,7 +7,7 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import yaml
 
@@ -104,8 +104,11 @@ class RiskEngine:
 
             # Try to get existing day state
             cursor.execute(
-                "SELECT date_utc, day_pnl, max_day_pnl, trades_today, consecutive_losses, cooldown_until "
-                "FROM day_state WHERE date_utc = ?",
+                (
+                    "SELECT date_utc, day_pnl, max_day_pnl, trades_today, "
+                    "consecutive_losses, cooldown_until "
+                    "FROM day_state WHERE date_utc = ?"
+                ),
                 (date_str,),
             )
             row = cursor.fetchone()
@@ -124,10 +127,12 @@ class RiskEngine:
                 )
 
                 cursor.execute(
-                    """
-                    INSERT INTO day_state (date_utc, day_pnl, max_day_pnl, trades_today, consecutive_losses, cooldown_until)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """,
+                    (
+                        "INSERT INTO day_state "
+                        "(date_utc, day_pnl, max_day_pnl, trades_today, "
+                        "consecutive_losses, cooldown_until) "
+                        "VALUES (?, ?, ?, ?, ?, ?)"
+                    ),
                     (
                         new_state.date_utc,
                         new_state.day_pnl,
@@ -162,14 +167,20 @@ class RiskEngine:
         if day_state.max_day_pnl - day_state.day_pnl >= self.config["DAILY_TRAIL_DRAWDOWN"]:
             return (
                 False,
-                f"Daily trail drawdown exceeded: {day_state.max_day_pnl - day_state.day_pnl} >= {self.config['DAILY_TRAIL_DRAWDOWN']}",
+                (
+                    "Daily trail drawdown exceeded: "
+                    f"{day_state.max_day_pnl - day_state.day_pnl} >= {self.config['DAILY_TRAIL_DRAWDOWN']}"
+                ),
             )
 
         # Gate c) Trade limit
         if day_state.trades_today >= self.config["MAX_TRADES_PER_DAY"]:
             return (
                 False,
-                f"Max trades per day reached: {day_state.trades_today} >= {self.config['MAX_TRADES_PER_DAY']}",
+                (
+                    "Max trades per day reached: "
+                    f"{day_state.trades_today} >= {self.config['MAX_TRADES_PER_DAY']}"
+                ),
             )
 
         # Gate d) Consecutive losses + cooldown
@@ -179,7 +190,10 @@ class RiskEngine:
                 if now_utc < cooldown_time:
                     return (
                         False,
-                        f"In cooldown until {day_state.cooldown_until} after {day_state.consecutive_losses} consecutive losses",
+                        (
+                            "In cooldown until "
+                            f"{day_state.cooldown_until} after {day_state.consecutive_losses} consecutive losses"
+                        ),
                     )
 
         # Gate e) One position per symbol
@@ -244,10 +258,12 @@ class RiskEngine:
                 )
 
                 cursor.execute(
-                    """
-                    INSERT INTO day_state (date_utc, day_pnl, max_day_pnl, trades_today, consecutive_losses, cooldown_until)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """,
+                    (
+                        "INSERT INTO day_state "
+                        "(date_utc, day_pnl, max_day_pnl, trades_today, "
+                        "consecutive_losses, cooldown_until) "
+                        "VALUES (?, ?, ?, ?, ?, ?)"
+                    ),
                     (
                         day_state.date_utc,
                         day_state.day_pnl,
@@ -283,11 +299,11 @@ class RiskEngine:
 
             # Update day state in database
             cursor.execute(
-                """
-                UPDATE day_state 
-                SET day_pnl = ?, max_day_pnl = ?, trades_today = ?, consecutive_losses = ?, cooldown_until = ?
-                WHERE date_utc = ?
-            """,
+                (
+                    "UPDATE day_state "
+                    "SET day_pnl = ?, max_day_pnl = ?, trades_today = ?, consecutive_losses = ?, cooldown_until = ? "
+                    "WHERE date_utc = ?"
+                ),
                 (
                     new_day_pnl,
                     new_max_day_pnl,
@@ -310,21 +326,23 @@ class RiskEngine:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                """
-                UPDATE day_state 
-                SET day_pnl = 0.0, max_day_pnl = 0.0, trades_today = 0, consecutive_losses = 0, cooldown_until = NULL
-                WHERE date_utc = ?
-            """,
+                (
+                    "UPDATE day_state "
+                    "SET day_pnl = 0.0, max_day_pnl = 0.0, trades_today = 0, "
+                    "consecutive_losses = 0, cooldown_until = NULL "
+                    "WHERE date_utc = ?"
+                ),
                 (date_utc,),
             )
 
             # If no row was updated, insert a new one
             if cursor.rowcount == 0:
                 cursor.execute(
-                    """
-                    INSERT INTO day_state (date_utc, day_pnl, max_day_pnl, trades_today, consecutive_losses, cooldown_until)
-                    VALUES (?, 0.0, 0.0, 0, 0, NULL)
-                """,
+                    (
+                        "INSERT INTO day_state "
+                        "(date_utc, day_pnl, max_day_pnl, trades_today, consecutive_losses, cooldown_until) "
+                        "VALUES (?, 0.0, 0.0, 0, 0, NULL)"
+                    ),
                     (date_utc,),
                 )
 

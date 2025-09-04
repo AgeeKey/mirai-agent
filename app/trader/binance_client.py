@@ -5,7 +5,7 @@ Binance UMFutures client with DRY_RUN mode support
 import logging
 import os
 from datetime import UTC, datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 try:
     from binance.error import ClientError, ServerError

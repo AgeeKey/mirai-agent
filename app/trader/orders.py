@@ -5,7 +5,7 @@ Order management with unified MARKET+SL/TP functionality
 import logging
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .binance_client import BinanceClient
 from .exchange_info import ExchangeInfo

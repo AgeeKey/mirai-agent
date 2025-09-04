@@ -3,7 +3,7 @@ Pydantic schemas for the trading agent
 """
 
 from datetime import datetime
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
