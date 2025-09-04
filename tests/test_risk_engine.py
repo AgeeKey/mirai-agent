@@ -208,9 +208,7 @@ class TestPositionSizeValidator:
     def test_validate_and_round_qty_basic(self):
         """Test basic quantity validation and rounding"""
         # Should round to proper step size and check minimums
-        qty = validate_and_round_qty(
-            symbol="BTCUSDT", qty=0.123456, sl_distance=100.0, margin=1000.0, leverage=1.0
-        )
+        qty = validate_and_round_qty(symbol="BTCUSDT", qty=0.123456, sl_distance=100.0, margin=1000.0, leverage=1.0)
 
         # Should be rounded to step size (0.001 for BTCUSDT)
         assert qty == 0.123
@@ -308,9 +306,7 @@ class TestCLIIntegration:
         """Test risk-reset CLI command functionality"""
         # Add some state
         now = datetime.now(timezone.utc)
-        self.risk_engine.record_fill(
-            ts=now.isoformat(), symbol="BTCUSDT", side="BUY", qty=0.1, price=50000.0, pnl=-5.0
-        )
+        self.risk_engine.record_fill(ts=now.isoformat(), symbol="BTCUSDT", side="BUY", qty=0.1, price=50000.0, pnl=-5.0)
 
         day_state = self.risk_engine.get_day_state(now)
         assert day_state.trades_today == 1

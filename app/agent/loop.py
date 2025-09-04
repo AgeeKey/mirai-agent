@@ -5,7 +5,7 @@ Main agent loop for trading decisions
 import logging
 import os
 import sys
-from datetime import UTC, datetime, timezone
+from datetime import datetime, timezone
 from typing import Any
 
 # Add the app directory to the Python path for CLI usage
@@ -91,9 +91,7 @@ class AgentLoop:
             features["adx"] = random.uniform(15, 40)
 
             # Volume trend (simple comparison)
-            features["volume_trend"] = (
-                "increasing" if market_data.volume > 1000000 else "decreasing"
-            )
+            features["volume_trend"] = "increasing" if market_data.volume > 1000000 else "decreasing"
 
         except Exception as e:
             logger.warning(f"Error building technical indicators: {e}")
@@ -157,10 +155,7 @@ class AgentLoop:
                 self.recovery_tries += 1
                 return (
                     True,
-                    (
-                        f"recovery_allowed "
-                        f"({self.recovery_tries}/{self.advisor_config['RECOVERY_MAX_TRIES']})"
-                    ),
+                    (f"recovery_allowed " f"({self.recovery_tries}/{self.advisor_config['RECOVERY_MAX_TRIES']})"),
                 )
 
         except Exception as e:
@@ -183,7 +178,7 @@ class AgentLoop:
                 "rationale": "Agent is paused",
                 "intent": "HOLD",
                 "action": "HOLD",
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "symbol": symbol,
             }
 
@@ -195,7 +190,7 @@ class AgentLoop:
                 price=float(market_data_dict.get("price", 0)),
                 volume=float(market_data_dict.get("volume", 0)),
                 change_24h=float(market_data_dict.get("change_24h", 0)),
-                timestamp=datetime.now(UTC),
+                timestamp=datetime.now(timezone.utc),
             )
 
             # Build features for advisor
@@ -223,9 +218,7 @@ class AgentLoop:
                     deny_reason = f"advisor_low_score ({advisor_result['score']:.3f} < {self.advisor_config['ADVISOR_THRESHOLD']})"
                 else:
                     # Check recovery logic if we have consecutive losses
-                    recovery_allowed, recovery_reason = self._check_recovery_logic(
-                        advisor_result["score"]
-                    )
+                    recovery_allowed, recovery_reason = self._check_recovery_logic(advisor_result["score"])
                     if not recovery_allowed:
                         decision_accepted = False
                         deny_reason = recovery_reason
@@ -234,7 +227,9 @@ class AgentLoop:
             if decision_accepted:
                 # Use the base decision but incorporate advisor info
                 final_decision = base_decision
-                final_rationale = f"Advisor approved (score: {advisor_result['score']:.3f}): {advisor_result['rationale']}"
+                final_rationale = (
+                    f"Advisor approved (score: {advisor_result['score']:.3f}): {advisor_result['rationale']}"
+                )
             else:
                 # Override to HOLD due to advisor
                 final_decision = AgentDecision(
@@ -299,7 +294,7 @@ class AgentLoop:
 
             # Store decision in history with advisor info
             decision_dict = final_decision.model_dump()
-            decision_dict["timestamp"] = datetime.now(UTC).isoformat()
+            decision_dict["timestamp"] = datetime.now(timezone.utc).isoformat()
             decision_dict["symbol"] = symbol
             decision_dict["advisor_score"] = advisor_result["score"]
             decision_dict["advisor_rationale"] = advisor_result["rationale"]
@@ -318,7 +313,7 @@ class AgentLoop:
                 "rationale": f"Error in decision making: {str(e)}",
                 "intent": "HOLD",
                 "action": "HOLD",
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "symbol": symbol,
                 "advisor_score": 0.0,
                 "advisor_rationale": "Error occurred",
@@ -363,11 +358,11 @@ class AgentLoop:
                 # Include advisor rationale in notification
                 advisor_info = ""
                 if "advisor_score" in decision:
-                    advisor_info = f" (Advisor: {decision['advisor_score']:.2f} - {decision.get('advisor_rationale', '')[:50]})"
+                    advisor_info = (
+                        f" (Advisor: {decision['advisor_score']:.2f} - {decision.get('advisor_rationale', '')[:50]})"
+                    )
 
-                enhanced_rationale = (
-                    decision.get("rationale", "No rationale provided") + advisor_info
-                )
+                enhanced_rationale = decision.get("rationale", "No rationale provided") + advisor_info
 
                 self.notifier.notify_entry(
                     symbol=symbol,
@@ -415,9 +410,7 @@ class AgentLoop:
 
                     if random.random() < 0.3:  # 30% chance to simulate trigger
                         trigger_type = "Stop Loss" if mock_pnl < 0 else "Take Profit"
-                        trigger_price = decision.get(
-                            "stop_loss", decision.get("take_profit", 50000.0)
-                        )
+                        trigger_price = decision.get("stop_loss", decision.get("take_profit", 50000.0))
                         self.notifier.notify_sl_tp_trigger(
                             symbol=symbol,
                             trigger_type=trigger_type,

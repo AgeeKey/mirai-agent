@@ -163,9 +163,7 @@ class ExplainabilityLogger:
 
             # Count advisor-filtered decisions
             stats["filtered_by_advisor"] = sum(
-                1
-                for d in daily_decisions
-                if not d.get("accepted") and "advisor" in d.get("deny_reason", "").lower()
+                1 for d in daily_decisions if not d.get("accepted") and "advisor" in d.get("deny_reason", "").lower()
             )
 
             # Top rationales (by frequency)
@@ -177,9 +175,7 @@ class ExplainabilityLogger:
 
             # Sort by frequency and get top 3
             sorted_rationales = sorted(rationale_counts.items(), key=lambda x: x[1], reverse=True)
-            stats["top_rationales"] = [
-                {"rationale": r[0], "count": r[1]} for r in sorted_rationales[:3]
-            ]
+            stats["top_rationales"] = [{"rationale": r[0], "count": r[1]} for r in sorted_rationales[:3]]
 
         except Exception as e:
             logger.error(f"Failed to calculate daily stats: {e}")

@@ -3,7 +3,7 @@ Order management with unified MARKET+SL/TP functionality
 """
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
@@ -77,24 +77,20 @@ class OrderManager:
             }
 
             # Store the order
-            order_id = market_order.get(
-                "orderId", f"DRY_RUN_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
-            )
+            order_id = market_order.get("orderId", f"DRY_RUN_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}")
             self.active_orders[order_id] = {
                 "symbol": symbol,
                 "side": side,
                 "quantity": adjusted_quantity,
                 "type": "MARKET_WITH_SLTP",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
                 "main_order": market_order,
             }
 
             # Place stop loss order if specified
             if stop_loss_price:
                 try:
-                    sl_order = self._place_stop_loss(
-                        symbol, side, adjusted_quantity, stop_loss_price
-                    )
+                    sl_order = self._place_stop_loss(symbol, side, adjusted_quantity, stop_loss_price)
                     order_result["stop_loss_order"] = sl_order
                     self.active_orders[order_id]["stop_loss_order"] = sl_order
                     logger.info(f"Stop loss order placed at {stop_loss_price}")
@@ -105,9 +101,7 @@ class OrderManager:
             # Place take profit order if specified
             if take_profit_price:
                 try:
-                    tp_order = self._place_take_profit(
-                        symbol, side, adjusted_quantity, take_profit_price
-                    )
+                    tp_order = self._place_take_profit(symbol, side, adjusted_quantity, take_profit_price)
                     order_result["take_profit_order"] = tp_order
                     self.active_orders[order_id]["take_profit_order"] = tp_order
                     logger.info(f"Take profit order placed at {take_profit_price}")
@@ -130,14 +124,10 @@ class OrderManager:
                 "take_profit_order": None,
             }
 
-    def _place_stop_loss(
-        self, symbol: str, original_side: str, quantity: float, stop_price: float
-    ) -> dict[str, Any]:
+    def _place_stop_loss(self, symbol: str, original_side: str, quantity: float, stop_price: float) -> dict[str, Any]:
         """Place a stop loss order"""
         # Stop loss side is opposite to original order
-        sl_side = (
-            OrderSide.SELL.value if original_side == OrderSide.BUY.value else OrderSide.BUY.value
-        )
+        sl_side = OrderSide.SELL.value if original_side == OrderSide.BUY.value else OrderSide.BUY.value
 
         # Validate stop price
         validated_params = self.exchange_info.validate_order_params(symbol, quantity, stop_price)
@@ -151,14 +141,10 @@ class OrderManager:
             price=adjusted_stop_price,
         )
 
-    def _place_take_profit(
-        self, symbol: str, original_side: str, quantity: float, tp_price: float
-    ) -> dict[str, Any]:
+    def _place_take_profit(self, symbol: str, original_side: str, quantity: float, tp_price: float) -> dict[str, Any]:
         """Place a take profit order"""
         # Take profit side is opposite to original order
-        tp_side = (
-            OrderSide.SELL.value if original_side == OrderSide.BUY.value else OrderSide.BUY.value
-        )
+        tp_side = OrderSide.SELL.value if original_side == OrderSide.BUY.value else OrderSide.BUY.value
 
         # Validate take profit price
         validated_params = self.exchange_info.validate_order_params(symbol, quantity, tp_price)
@@ -172,9 +158,7 @@ class OrderManager:
             price=adjusted_tp_price,
         )
 
-    def place_limit_order(
-        self, symbol: str, side: str, quantity: float, price: float
-    ) -> dict[str, Any]:
+    def place_limit_order(self, symbol: str, side: str, quantity: float, price: float) -> dict[str, Any]:
         """Place a limit order"""
         logger.info(f"Placing limit order: {side} {quantity} {symbol} at {price}")
 
@@ -191,16 +175,14 @@ class OrderManager:
             )
 
             # Store the order
-            order_id = order.get(
-                "orderId", f"DRY_RUN_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
-            )
+            order_id = order.get("orderId", f"DRY_RUN_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}")
             self.active_orders[order_id] = {
                 "symbol": symbol,
                 "side": side,
                 "quantity": validated_params["quantity"],
                 "price": validated_params["price"],
                 "type": "LIMIT",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
                 "order": order,
             }
 
@@ -339,9 +321,7 @@ class OrderManager:
             raise
 
 
-def validate_and_round_qty(
-    symbol: str, qty: float, sl_distance: float, margin: float, leverage: float
-) -> float:
+def validate_and_round_qty(symbol: str, qty: float, sl_distance: float, margin: float, leverage: float) -> float:
     """
     Position sizing validator - validates and rounds quantity based on constraints
 
@@ -392,9 +372,7 @@ def validate_and_round_qty(
         notional = validated_qty * mock_price
 
         if notional < min_notional:
-            raise ValueError(
-                f"Notional value {notional} below minNotional {min_notional} for {symbol}"
-            )
+            raise ValueError(f"Notional value {notional} below minNotional {min_notional} for {symbol}")
 
         logger.info(f"Position size validated for {symbol}: {qty} -> {validated_qty}")
         return validated_qty

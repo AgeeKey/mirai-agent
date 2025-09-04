@@ -4,7 +4,7 @@ Binance UMFutures client with DRY_RUN mode support
 
 import logging
 import os
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 try:
@@ -41,9 +41,7 @@ class BinanceClient:
             try:
                 if UMFutures:
                     base_url = "https://testnet.binancefuture.com" if testnet else None
-                    self.client = UMFutures(
-                        key=self.api_key, secret=self.secret_key, base_url=base_url
-                    )
+                    self.client = UMFutures(key=self.api_key, secret=self.secret_key, base_url=base_url)
                     logger.info(f"Initialized Binance client (testnet={testnet})")
                 else:
                     logger.warning("binance-connector not available, running in simulation mode")
@@ -84,7 +82,7 @@ class BinanceClient:
                 "price": round(current_price, 2),
                 "volume": round(random.uniform(1000, 50000), 2),
                 "change_24h": round(random.uniform(-0.1, 0.1), 4),
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
         if not self.client:
@@ -99,7 +97,7 @@ class BinanceClient:
                 "price": float(ticker["lastPrice"]),
                 "volume": float(ticker["volume"]),
                 "change_24h": float(ticker["priceChangePercent"]) / 100,
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         except Exception as e:
             logger.error(f"Error fetching market data: {str(e)}")
@@ -152,7 +150,7 @@ class BinanceClient:
 
         if self.dry_run:
             # Simulate order execution
-            order_id = f"DRY_RUN_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
+            order_id = f"DRY_RUN_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
 
             result = {
                 "orderId": order_id,
@@ -162,7 +160,7 @@ class BinanceClient:
                 "quantity": quantity,
                 "status": "FILLED",
                 "price": price or "MARKET",
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "dry_run": True,
             }
 
@@ -338,9 +336,7 @@ class BinanceClient:
             quantity = abs(position_amt)
 
             # Place market order to close position
-            result = self.place_order(
-                symbol=symbol, side=side, quantity=quantity, order_type="MARKET"
-            )
+            result = self.place_order(symbol=symbol, side=side, quantity=quantity, order_type="MARKET")
 
             # Note: For real implementation, you'd set reduceOnly=True in the order params
             # but this requires specific binance-connector API support

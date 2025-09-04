@@ -2,7 +2,7 @@
 Tests for the agent module
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from unittest.mock import Mock, patch
 
 from app.agent.loop import AgentLoop
@@ -13,9 +13,7 @@ from app.agent.schema import AgentDecision, MarketData
 class TestAgentSchemas:
     def test_agent_decision_creation(self):
         """Test AgentDecision schema validation"""
-        decision = AgentDecision(
-            score=0.8, rationale="Test rationale", intent="BUY", action="MARKET_BUY", quantity=0.5
-        )
+        decision = AgentDecision(score=0.8, rationale="Test rationale", intent="BUY", action="MARKET_BUY", quantity=0.5)
         assert decision.score == 0.8
         assert decision.intent == "BUY"
         assert decision.action == "MARKET_BUY"
@@ -27,7 +25,7 @@ class TestAgentSchemas:
             price=45000.0,
             volume=1000000.0,
             change_24h=0.05,
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
         )
         assert market_data.symbol == "BTCUSDT"
         assert market_data.price == 45000.0
@@ -44,7 +42,7 @@ class TestMockLLMPolicy:
             price=45000.0,
             volume=1000000.0,
             change_24h=0.05,
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
         )
 
         decision = self.policy.analyze_market(market_data)
@@ -56,9 +54,7 @@ class TestMockLLMPolicy:
 
     def test_evaluate_risk(self):
         """Test risk evaluation"""
-        decision = AgentDecision(
-            score=0.8, rationale="Test", intent="BUY", action="MARKET_BUY", quantity=0.5
-        )
+        decision = AgentDecision(score=0.8, rationale="Test", intent="BUY", action="MARKET_BUY", quantity=0.5)
 
         risk_ok = self.policy.evaluate_risk(decision)
         assert isinstance(risk_ok, bool)

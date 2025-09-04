@@ -39,12 +39,8 @@ def cli():
 
 
 @cli.command()
-@click.option(
-    "--config", "-c", default="configs/strategies.yaml", help="Path to strategy configuration file"
-)
-@click.option(
-    "--dry-run", is_flag=True, default=True, help="Run in dry-run mode (no actual trades)"
-)
+@click.option("--config", "-c", default="configs/strategies.yaml", help="Path to strategy configuration file")
+@click.option("--dry-run", is_flag=True, default=True, help="Run in dry-run mode (no actual trades)")
 def dry_run_check(config, dry_run):
     """Perform a dry run check of the trading system"""
     click.echo("🔍 Starting dry-run check...")
@@ -85,9 +81,7 @@ def dry_run_check(config, dry_run):
 
 @cli.command()
 @click.option("--symbol", "-s", default="BTCUSDT", help="Trading symbol (default: BTCUSDT)")
-@click.option(
-    "--dry-run", is_flag=True, default=True, help="Run in dry-run mode (no actual trades)"
-)
+@click.option("--dry-run", is_flag=True, default=True, help="Run in dry-run mode (no actual trades)")
 def agent_once(symbol, dry_run):
     """Run the trading agent once for a single decision cycle"""
     click.echo(f"🚀 Running agent once for {symbol}...")
@@ -129,9 +123,7 @@ def agent_once(symbol, dry_run):
 
 @cli.command()
 @click.option("--symbol", "-s", default="BTCUSDT", help="Trading symbol (default: BTCUSDT)")
-@click.option(
-    "--dry-run", is_flag=True, default=True, help="Run in dry-run mode (no actual trades)"
-)
+@click.option("--dry-run", is_flag=True, default=True, help="Run in dry-run mode (no actual trades)")
 def sanity_trade(symbol, dry_run):
     """Place a tiny MARKET order with SL (STOP_MARKET) and TP (TAKE_PROFIT_MARKET) for testing"""
     click.echo(f"🧪 Running sanity trade for {symbol}...")
@@ -165,9 +157,7 @@ def sanity_trade(symbol, dry_run):
 
 @cli.command()
 @click.argument("symbol")
-@click.option(
-    "--dry-run", is_flag=True, default=True, help="Run in dry-run mode (no actual cancellation)"
-)
+@click.option("--dry-run", is_flag=True, default=True, help="Run in dry-run mode (no actual cancellation)")
 def cancel_all(symbol, dry_run):
     """Cancel all open orders for a given symbol"""
     click.echo(f"🚫 Cancelling all orders for {symbol}...")
@@ -194,9 +184,7 @@ def cancel_all(symbol, dry_run):
 
 @cli.command()
 @click.argument("symbol")
-@click.option(
-    "--dry-run", is_flag=True, default=True, help="Run in dry-run mode (no actual trades)"
-)
+@click.option("--dry-run", is_flag=True, default=True, help="Run in dry-run mode (no actual trades)")
 def kill_switch(symbol, dry_run):
     """Cancel all orders and close position with MARKET order (reduceOnly)"""
     click.echo(f"💥 Executing kill switch for {symbol}...")
@@ -287,9 +275,7 @@ def telegram_bot():
         start_bot()
     except ImportError as e:
         if "python-telegram-bot" in str(e) or "No module named 'telegram'" in str(e):
-            click.echo(
-                "❌ python-telegram-bot not installed. Install it with: pip install python-telegram-bot>=20"
-            )
+            click.echo("❌ python-telegram-bot not installed. Install it with: pip install python-telegram-bot>=20")
         else:
             click.echo(f"❌ Import error: {str(e)}")
         sys.exit(1)
@@ -332,9 +318,7 @@ def web_run(host, port):
 
     except ImportError as e:
         if "uvicorn" in str(e) or "fastapi" in str(e):
-            click.echo(
-                "❌ FastAPI/uvicorn not installed. Install with: pip install fastapi uvicorn[standard]"
-            )
+            click.echo("❌ FastAPI/uvicorn not installed. Install with: pip install fastapi uvicorn[standard]")
         else:
             click.echo(f"❌ Import error: {str(e)}")
         sys.exit(1)

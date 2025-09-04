@@ -93,9 +93,7 @@ async def kill_switch(request: KillRequest, authorized: bool = Depends(verify_cr
     except Exception as e:
         agent_state["errors_count"] += 1
         logger.error(f"Kill switch error: {e}")
-        raise HTTPException(
-            status_code=500, detail={"error": "Kill switch failed", "reason": str(e)}
-        )
+        raise HTTPException(status_code=500, detail={"error": "Kill switch failed", "reason": str(e)})
 
 
 @app.get("/metrics")
@@ -173,9 +171,7 @@ async def general_exception_handler(request, exc):
     agent_state["errors_count"] += 1
     logger.error(f"Unhandled exception: {exc}")
 
-    return JSONResponse(
-        status_code=500, content={"error": "Internal server error", "reason": str(exc)}
-    )
+    return JSONResponse(status_code=500, content={"error": "Internal server error", "reason": str(exc)})
 
 
 if __name__ == "__main__":

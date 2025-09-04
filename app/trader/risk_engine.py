@@ -146,9 +146,7 @@ class RiskEngine:
 
                 return new_state
 
-    def allow_entry(
-        self, now_utc: datetime, symbol: str, account_state: dict[str, Any] = None
-    ) -> tuple[bool, str]:
+    def allow_entry(self, now_utc: datetime, symbol: str, account_state: dict[str, Any] = None) -> tuple[bool, str]:
         """
         Check if entry is allowed based on risk gates
         Returns (allowed, reason)
@@ -177,10 +175,7 @@ class RiskEngine:
         if day_state.trades_today >= self.config["MAX_TRADES_PER_DAY"]:
             return (
                 False,
-                (
-                    "Max trades per day reached: "
-                    f"{day_state.trades_today} >= {self.config['MAX_TRADES_PER_DAY']}"
-                ),
+                ("Max trades per day reached: " f"{day_state.trades_today} >= {self.config['MAX_TRADES_PER_DAY']}"),
             )
 
         # Gate d) Consecutive losses + cooldown

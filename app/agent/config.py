@@ -37,9 +37,7 @@ def load_advisor_config(config_path: str = "configs/risk.yaml") -> dict[str, Any
         for key, default_value in defaults.items():
             if key not in advisor_config:
                 advisor_config[key] = default_value
-                logger.warning(
-                    f"Missing advisor config key '{key}', using default: {default_value}"
-                )
+                logger.warning(f"Missing advisor config key '{key}', using default: {default_value}")
 
         return advisor_config
 

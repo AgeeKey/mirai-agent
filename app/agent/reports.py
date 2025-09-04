@@ -170,16 +170,12 @@ ACTION BREAKDOWN
 
         # Calculate metrics
         accepted_scores = [d.get("score", 0.0) for d in daily_decisions if d.get("accepted", False)]
-        denied_scores = [
-            d.get("score", 0.0) for d in daily_decisions if not d.get("accepted", True)
-        ]
+        denied_scores = [d.get("score", 0.0) for d in daily_decisions if not d.get("accepted", True)]
 
         return {
             "gating_rate": self._calculate_percentage(filtered, total),
             "decision_quality": self._assess_decision_quality(daily_stats),
-            "avg_score_accepted": (
-                sum(accepted_scores) / len(accepted_scores) if accepted_scores else 0.0
-            ),
+            "avg_score_accepted": (sum(accepted_scores) / len(accepted_scores) if accepted_scores else 0.0),
             "avg_score_denied": sum(denied_scores) / len(denied_scores) if denied_scores else 0.0,
             "score_separation": abs(
                 (sum(accepted_scores) / len(accepted_scores) if accepted_scores else 0.0)

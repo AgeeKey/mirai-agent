@@ -33,9 +33,7 @@ class TestBinanceClient:
 
     def test_place_order_dry_run(self):
         """Test order placement in dry run mode"""
-        result = self.client.place_order(
-            symbol="BTCUSDT", side="BUY", quantity=0.1, order_type="MARKET"
-        )
+        result = self.client.place_order(symbol="BTCUSDT", side="BUY", quantity=0.1, order_type="MARKET")
 
         assert "orderId" in result
         assert result["dry_run"] is True
@@ -64,9 +62,7 @@ class TestExchangeInfo:
 
     def test_validate_order_params(self):
         """Test complete order parameter validation"""
-        params = self.exchange_info.validate_order_params(
-            "BTCUSDT", quantity=0.1234567, price=45123.456
-        )
+        params = self.exchange_info.validate_order_params("BTCUSDT", quantity=0.1234567, price=45123.456)
 
         assert "quantity" in params
         assert "price" in params
@@ -166,9 +162,7 @@ class TestExchangeInfoStrictRounding:
 
         for input_qty, expected_qty in test_cases:
             result = self.exchange_info.validate_quantity("BTCUSDT", input_qty)
-            assert (
-                result == expected_qty
-            ), f"Expected {expected_qty}, got {result} for input {input_qty}"
+            assert result == expected_qty, f"Expected {expected_qty}, got {result} for input {input_qty}"
 
     def test_price_rounding_works_correctly(self):
         """Test price rounding works correctly with strict decimal precision"""
@@ -181,9 +175,7 @@ class TestExchangeInfoStrictRounding:
 
         for input_price, expected_price in test_cases:
             result = self.exchange_info.validate_price("BTCUSDT", input_price)
-            assert (
-                result == expected_price
-            ), f"Expected {expected_price}, got {result} for input {input_price}"
+            assert result == expected_price, f"Expected {expected_price}, got {result} for input {input_price}"
 
     def test_decimal_precision_edge_cases(self):
         """Test edge cases that could cause -1013 errors"""

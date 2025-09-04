@@ -74,9 +74,7 @@ class TestTelegramNotifier:
         notifier = TelegramNotifier("", "")  # Disabled notifier
 
         # Should not raise an exception
-        notifier.notify_sl_tp_trigger(
-            symbol="BTCUSDT", trigger_type="Stop Loss", price=49000.0, pnl=-500.0
-        )
+        notifier.notify_sl_tp_trigger(symbol="BTCUSDT", trigger_type="Stop Loss", price=49000.0, pnl=-500.0)
 
     def test_notify_risk_block(self):
         """Test notify_risk_block message formatting"""
@@ -152,9 +150,7 @@ class TestEnvironmentFunctions:
 
     def test_create_notifier_from_env_with_config(self):
         """Test creating notifier from env with configuration"""
-        with patch.dict(
-            "os.environ", {"TELEGRAM_TOKEN": "fake_token", "TELEGRAM_CHAT_ID": "fake_chat_id"}
-        ):
+        with patch.dict("os.environ", {"TELEGRAM_TOKEN": "fake_token", "TELEGRAM_CHAT_ID": "fake_chat_id"}):
             notifier = create_notifier_from_env()
             assert notifier is not None
             assert notifier.token == "fake_token"
@@ -168,9 +164,7 @@ class TestEnvironmentFunctions:
 
     def test_create_bot_from_env_with_config(self):
         """Test creating bot from env with configuration"""
-        with patch.dict(
-            "os.environ", {"TELEGRAM_TOKEN": "fake_token", "TELEGRAM_CHAT_ID": "fake_chat_id"}
-        ):
+        with patch.dict("os.environ", {"TELEGRAM_TOKEN": "fake_token", "TELEGRAM_CHAT_ID": "fake_chat_id"}):
             with patch("app.telegram_bot.bot.TELEGRAM_AVAILABLE", True):
                 with patch("app.telegram_bot.bot.Application") as mock_app_class:
                     mock_app = Mock()
@@ -293,6 +287,4 @@ class TestIntegrationWithAgentLoop:
 
                     # Should be blocked and notifier should be called
                     assert decision["action"] == "HOLD"
-                    mock_notifier.notify_risk_block.assert_called_once_with(
-                        "BTCUSDT", "Daily loss limit exceeded"
-                    )
+                    mock_notifier.notify_risk_block.assert_called_once_with("BTCUSDT", "Daily loss limit exceeded")

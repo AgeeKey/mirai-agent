@@ -54,9 +54,7 @@ class TelegramNotifier:
         if self._enabled:
             self.bot = Bot(token=token)
         else:
-            logger.warning(
-                "Telegram notifications disabled - missing dependencies or configuration"
-            )
+            logger.warning("Telegram notifications disabled - missing dependencies or configuration")
 
     async def send_message(self, message: str, parse_mode: str = ParseMode.MARKDOWN):
         """Send a message to the configured chat"""
@@ -183,13 +181,9 @@ class TelegramBot:
                 "cooldown_until": day_state.cooldown_until,
                 "open_positions": open_positions,
                 "trading_mode": self.trading_mode,
-                "agent_paused": (
-                    getattr(self.agent_loop, "paused", False) if self.agent_loop else False
-                ),
+                "agent_paused": (getattr(self.agent_loop, "paused", False) if self.agent_loop else False),
                 "last_score": advisor_state.get("score", 0.0),
-                "last_rationale": advisor_state.get("rationale", "No advisor data")[
-                    :100
-                ],  # Truncate for display
+                "last_rationale": advisor_state.get("rationale", "No advisor data")[:100],  # Truncate for display
             }
 
             # Create more readable message
@@ -198,13 +192,13 @@ class TelegramBot:
 💰 Day PnL: `{status_data['day_pnl']:.2f}`
 📈 Max Day PnL: `{status_data['max_day_pnl']:.2f}`
 📊 Trades Today: `{status_data['trades_today']}`
-❌ Consecutive Losses: ````{status_data['consecutive_losses']}`
+❌ Consecutive Losses: `````{status_data['consecutive_losses']}`
 🏪 Open Positions: `{status_data['open_positions']}`
 🎯 Trading Mode: `{status_data['trading_mode']}`
 ⏸️ Agent Paused: `{status_data['agent_paused']}`
 
 🤖 *AI Advisor*
-Score: `e: `e: `e: `{status_data['last_score']:.3f}`
+Score: `e: `e: `e: `e: `{status_data['last_score']:.3f}`
 Rationale: _{status_data['last_rationale']}_
 
 Use /mode <advisor|semi|auto> to change mode"""
@@ -290,9 +284,7 @@ Use /mode <advisor|semi|auto> to change mode"""
             valid_modes = ["advisor", "semi", "auto"]
 
             if new_mode not in valid_modes:
-                await update.message.reply_text(
-                    f"❌ Invalid mode. Valid modes: {', '.join(valid_modes)}"
-                )
+                await update.message.reply_text(f"❌ Invalid mode. Valid modes: {', '.join(valid_modes)}")
                 return
 
             self.trading_mode = new_mode
@@ -358,18 +350,14 @@ def create_bot_from_env(agent_loop: AgentLoop | None = None) -> TelegramBot | No
 def start_bot():
     """Main function to start the Telegram bot"""
     if not TELEGRAM_AVAILABLE:
-        print(
-            "❌ python-telegram-bot not installed. Install it with: pip install python-telegram-bot>=20"
-        )
+        print("❌ python-telegram-bot not installed. Install it with: pip install python-telegram-bot>=20")
         return
 
     token = os.getenv("TELEGRAM_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
 
     if not token or not chat_id:
-        print(
-            "❌ Missing Telegram configuration. Set TELEGRAM_TOKEN and TELEGRAM_CHAT_ID environment variables."
-        )
+        print("❌ Missing Telegram configuration. Set TELEGRAM_TOKEN and TELEGRAM_CHAT_ID environment variables.")
         return
 
     # Create agent loop for bot control
