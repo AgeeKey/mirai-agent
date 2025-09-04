@@ -1,7 +1,8 @@
 """
 HTML UI for Mirai Agent Web Interface
 """
-from fastapi import APIRouter, Request, Depends
+
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 
 from .utils import verify_credentials
@@ -313,6 +314,7 @@ HTML_TEMPLATE = """
 </body>
 </html>
 """
+
 
 @ui_router.get("/", response_class=HTMLResponse)
 async def get_dashboard(request: Request, authorized: bool = Depends(verify_credentials)):
