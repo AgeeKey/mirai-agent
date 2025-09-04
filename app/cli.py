@@ -289,7 +289,7 @@ def telegram_bot():
 
 
 @cli.command("web-run")
-@click.option('--host', default='0.0.0.0', help='Host to bind to')
+@click.option('--host', default='127.0.0.1', help='Host to bind to')
 @click.option('--port', default=8000, type=int, help='Port to bind to')
 def web_run(host, port):
     """Start the web panel server"""
