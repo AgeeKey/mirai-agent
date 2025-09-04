@@ -1,17 +1,19 @@
 """
 Shared utilities for the web interface
 """
-import os
-import logging
-from datetime import datetime, timezone
-from typing import Dict, Any
 
-from fastapi import HTTPException, Depends, status
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+import logging
+import os
 
 # Adjust imports for the web module context
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Dict
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+
 app_root = Path(__file__).parent.parent
 sys.path.insert(0, str(app_root))
 
@@ -29,21 +31,24 @@ _agent_state = {
     "start_time": None,
     "errors_count": 0,
     "api_calls": 0,
-    "last_decision": None
+    "last_decision": None,
 }
+
 
 def get_agent_state() -> Dict[str, Any]:
     """Get the global agent state"""
     import time
+
     if _agent_state["start_time"] is None:
         _agent_state["start_time"] = time.time()
     return _agent_state
 
+
 def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)) -> bool:
     """Verify BasicAuth credentials from environment variables"""
-    web_user = os.getenv('WEB_USER')
-    web_pass = os.getenv('WEB_PASS')
-    
+    web_user = os.getenv("WEB_USER")
+    web_pass = os.getenv("WEB_PASS")
+
     if not web_user or not web_pass:
         logger.warning("WEB_USER or WEB_PASS not set in environment")
         raise HTTPException(
@@ -51,7 +56,7 @@ def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)) ->
             detail="Web authentication not configured. Set WEB_USER and WEB_PASS environment variables.",
             headers={"WWW-Authenticate": "Basic"},
         )
-    
+
     if credentials.username != web_user or credentials.password != web_pass:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -60,30 +65,31 @@ def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)) ->
         )
     return True
 
+
 def get_safe_status_data() -> Dict[str, Any]:
     """Get status data with safe fallbacks"""
     agent_state = get_agent_state()
-    
+
     try:
         risk_engine = get_risk_engine()
         now_utc = datetime.now(timezone.utc)
         day_state = risk_engine.get_day_state(now_utc)
-        
+
         # Get advisor data from last decision if available
         last_decision = agent_state.get("last_decision")
         advisor_score = 0.0
         advisor_rationale = "No advisor data"
         advisor_strategy = "none"
         advisor_action = "HOLD"
-        
+
         if last_decision and isinstance(last_decision, dict):
             advisor_score = last_decision.get("advisor_score", 0.0)
             advisor_rationale = last_decision.get("advisor_rationale", "No advisor data")
             advisor_strategy = last_decision.get("advisor_strategy", "none")
             advisor_action = last_decision.get("advisor_action", "HOLD")
-        
+
         return {
-            "date": now_utc.strftime('%Y-%m-%d %H:%M:%S UTC'),
+            "date": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
             "mode": agent_state["mode"],
             "dayPnL": day_state.day_pnl,
             "maxDayPnL": day_state.max_day_pnl,
@@ -97,12 +103,12 @@ def get_safe_status_data() -> Dict[str, Any]:
             "advisorScore": advisor_score,
             "advisorRationale": advisor_rationale,
             "advisorStrategy": advisor_strategy,
-            "advisorAction": advisor_action
+            "advisorAction": advisor_action,
         }
     except Exception as e:
         logger.warning(f"Error getting status data: {e}")
         return {
-            "date": datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC'),
+            "date": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
             "mode": agent_state["mode"],
             "dayPnL": 0.0,
             "maxDayPnL": 0.0,
@@ -116,5 +122,5 @@ def get_safe_status_data() -> Dict[str, Any]:
             "advisorScore": 0.0,
             "advisorRationale": "Error getting advisor data",
             "advisorStrategy": "error",
-            "advisorAction": "HOLD"
+            "advisorAction": "HOLD",
         }

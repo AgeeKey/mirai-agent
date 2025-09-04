@@ -1,6 +1,7 @@
 """
 Test configuration for mirai-agent
 """
+
 import os
 import sys
 from pathlib import Path
