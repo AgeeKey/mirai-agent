@@ -42,10 +42,9 @@ jobs:
       run: |
         black --check app/ --diff
     
-    - name: Test imports and basic functionality
+    - name: Run tests with pytest
       run: |
-        python -c "import app.cli; import app.agent.loop; import app.trader.binance_client; print('All imports successful')"
-        python -m app.cli --help
+        pytest -q
       env:
         PYTHONPATH: ${{ github.workspace }}
         DRY_RUN: true

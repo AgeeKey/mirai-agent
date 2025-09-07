@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  api:
+    image: ghcr.io/${GITHUB_OWNER}/mirai-api:${TAG:-latest}
+    restart: unless-stopped
+    env_file: .env.production
+    networks: [mirai]
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  trader:
+    image: ghcr.io/${GITHUB_OWNER}/mirai-trader:${TAG:-latest}
+    restart: unless-stopped
+    env_file: .env.production
+    networks: [mirai]
+
+  services:
+    image: ghcr.io/${GITHUB_OWNER}/mirai-services:${TAG:-latest}
+    restart: unless-stopped
+    env_file: .env.production
+    networks: [mirai]
+    ports:
+      - "127.0.0.1:3000:3000"
+
+networks:
+  mirai: {}
