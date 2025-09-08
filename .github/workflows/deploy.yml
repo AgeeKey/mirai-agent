@@ -30,7 +30,14 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e
+            mkdir -p /opt/mirai
             cd /opt/mirai
+
+            # Отладка: проверяем, что файлы скопированы в нужные места
+            echo "PWD: $(pwd)"
+            ls -la || true
+            echo "--- infra contents ---"
+            ls -la infra || true
 
             # генерим .env.production из секретов
             cat > .env.production << 'EOF'
@@ -52,6 +59,9 @@ jobs:
             export TAG="${{ github.event.inputs.tag || 'latest' }}"
 
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+
+            # Копируем compose-файл в корень, чтобы env_file=.env.production резолвился корректно
+            cp -f infra/docker-compose.prod.yml ./docker-compose.prod.yml
 
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d
