@@ -12,6 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Compute lowercase owner
+        id: vars
+        run: echo "owner_lc=${OWNER,,}" >> $GITHUB_OUTPUT
+        env:
+          OWNER: ${{ github.repository_owner }}
+
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -24,18 +30,18 @@ jobs:
         with:
           context: app/api
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/mirai-api:latest
+          tags: ghcr.io/${{ steps.vars.outputs.owner_lc }}/mirai-api:latest
 
       - name: Build & Push Trader
         uses: docker/build-push-action@v6
         with:
           context: app/trader
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/mirai-trader:latest
+          tags: ghcr.io/${{ steps.vars.outputs.owner_lc }}/mirai-trader:latest
 
       - name: Build & Push Services
         uses: docker/build-push-action@v6
         with:
           context: web/services
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/mirai-services:latest
+          tags: ghcr.io/${{ steps.vars.outputs.owner_lc }}/mirai-services:latest

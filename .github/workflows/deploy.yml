@@ -47,7 +47,8 @@ jobs:
             WEB_PORT=8000
             EOF
 
-            export GITHUB_OWNER="${{ github.repository_owner }}"
+            OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+            export GITHUB_OWNER="$OWNER_LC"
             export TAG="${{ github.event.inputs.tag || 'latest' }}"
 
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
