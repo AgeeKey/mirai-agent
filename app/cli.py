@@ -291,7 +291,6 @@ def web_run(host, port):
     """Start the web panel server"""
     try:
         import uvicorn
-
         from web.api import app
 
         # Check for web credentials

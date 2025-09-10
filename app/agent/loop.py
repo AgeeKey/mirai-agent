@@ -197,7 +197,8 @@ class AgentLoop:
             advisor_result = get_signal_score(features)
             self.latest_advisor_result = advisor_result
             logger.info(
-                f"Advisor result: score={advisor_result['score']}, action={advisor_result['action']}, strategy={advisor_result['strategy']}"
+                f"Advisor result: score={advisor_result['score']}, action={advisor_result['action']}, "
+                f"strategy={advisor_result['strategy']}"
             )
 
             # Get base agent decision from policy
@@ -212,7 +213,10 @@ class AgentLoop:
                 # Check advisor threshold
                 if advisor_result["score"] < self.advisor_config["ADVISOR_THRESHOLD"]:
                     decision_accepted = False
-                    deny_reason = f"advisor_low_score ({advisor_result['score']:.3f} < {self.advisor_config['ADVISOR_THRESHOLD']})"
+                    deny_reason = (
+                        f"advisor_low_score ({advisor_result['score']:.3f} < "
+                        f"{self.advisor_config['ADVISOR_THRESHOLD']})"
+                    )
                 else:
                     # Check recovery logic if we have consecutive losses
                     recovery_allowed, recovery_reason = self._check_recovery_logic(advisor_result["score"])
@@ -398,7 +402,8 @@ class AgentLoop:
                 )
 
                 logger.info(
-                    f"Recorded simulated fill: {symbol} {order_params['side']} {order_params['quantity']} PnL: {mock_pnl}"
+                    f"Recorded simulated fill: {symbol} {order_params['side']} "
+                    f"{order_params['quantity']} PnL: {mock_pnl}"
                 )
 
                 # Simulate SL/TP triggers for notification testing
