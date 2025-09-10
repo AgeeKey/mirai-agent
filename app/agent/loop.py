@@ -145,17 +145,14 @@ class AgentLoop:
                 if advisor_score < self.advisor_config["RECOVERY_THRESHOLD"]:
                     return (
                         False,
-                        (
-                            f"recovery_score_too_low "
-                            f"({advisor_score:.3f} < {self.advisor_config['RECOVERY_THRESHOLD']})"
-                        ),
+                        (f"recovery_score_too_low ({advisor_score:.3f} < {self.advisor_config['RECOVERY_THRESHOLD']})"),
                     )
 
                 # Recovery conditions met
                 self.recovery_tries += 1
                 return (
                     True,
-                    (f"recovery_allowed " f"({self.recovery_tries}/{self.advisor_config['RECOVERY_MAX_TRIES']})"),
+                    (f"recovery_allowed ({self.recovery_tries}/{self.advisor_config['RECOVERY_MAX_TRIES']})"),
                 )
 
         except Exception as e:
