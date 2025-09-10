@@ -169,8 +169,9 @@ mirai-agent/
 
 ## 8) Домены / DNS
 
-**panel.aimirai.online:** ❌ (не проверено)  
-**aimirai.info, www.aimirai.info:** ❌ (не проверено)
+**aimirai.online:** ✅ (работает)  
+**aimirai.info:** ✅ (работает)  
+**www.aimirai.info:** ❌ (не проверено)
 
 ## 9) Безопасность
 
