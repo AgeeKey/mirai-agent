@@ -50,7 +50,9 @@ jobs:
             NEXT_PUBLIC_SITE_URL=https://${{ secrets.DOMAIN_STUDIO }}
             EOF
 
-            export GITHUB_OWNER="${{ github.repository_owner }}"
+            # Преобразуем owner в lowercase для Docker
+            OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+            export GITHUB_OWNER="$OWNER_LC"
             export TAG="latest"
 
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
