@@ -176,12 +176,12 @@ class SignalAdvisor:
         Analyze the following market data and provide a trading recommendation:
         
         Market Features:
-        - Current Price: {features.get('price', 'N/A')}
-        - EMA: {features.get('ema', 'N/A')}
-        - RSI: {features.get('rsi', 'N/A')}
-        - ATR: {features.get('atr', 'N/A')}
-        - ADX: {features.get('adx', 'N/A')}
-        - Volume Trend: {features.get('volume_trend', 'N/A')}
+        - Current Price: {features.get("price", "N/A")}
+        - EMA: {features.get("ema", "N/A")}
+        - RSI: {features.get("rsi", "N/A")}
+        - ATR: {features.get("atr", "N/A")}
+        - ADX: {features.get("adx", "N/A")}
+        - Volume Trend: {features.get("volume_trend", "N/A")}
         
         Please return a JSON response with the following structure:
         {{

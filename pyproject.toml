@@ -14,3 +14,6 @@ ignore = []
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
+
+[tool.flake8]
+max-line-length = 120
