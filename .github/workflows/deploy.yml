@@ -19,7 +19,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          source: "infra/docker-compose.prod.yml,infra/env/.env.production.template"
+          source: "infra/docker-compose.prod.yml"
           target: "/opt/mirai"
 
       - name: Provision & Deploy
@@ -32,31 +32,26 @@ jobs:
             set -e
             cd /opt/mirai
 
-            # cобираем финальный .env.production из GitHub Secrets
+            # генерируем .env.production
             cat > .env.production << 'EOF'
-            # === Common ===
             ENVIRONMENT=${{ secrets.ENVIRONMENT }}
             OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
             TELEGRAM_CHAT_ID_ADMIN=${{ secrets.TELEGRAM_CHAT_ID_ADMIN }}
 
-            # === Web Panel / API ===
             WEB_USER=${{ secrets.WEB_USER }}
             WEB_PASS=${{ secrets.WEB_PASS }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             WEB_PORT=8000
 
-            # === Trader ===
             BINANCE_API_KEY=${{ secrets.BINANCE_API_KEY }}
             BINANCE_API_SECRET=${{ secrets.BINANCE_API_SECRET }}
 
-            # === Services (Next.js) ===
             NEXT_PUBLIC_SITE_URL=https://${{ secrets.DOMAIN_STUDIO }}
             EOF
 
-            # передаём owner/tag без локального .env
             export GITHUB_OWNER="${{ github.repository_owner }}"
-            export TAG="${{ github.event.inputs.tag || 'latest' }}"
+            export TAG="latest"
 
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
             docker compose -f docker-compose.prod.yml pull
