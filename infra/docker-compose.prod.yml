@@ -5,9 +5,10 @@ services:
     image: ghcr.io/${GITHUB_OWNER}/mirai-api:${TAG:-latest}
     restart: unless-stopped
     env_file: .env.production
-    networks: [mirai]
+    command: uvicorn mirai_api.main:app --host 0.0.0.0 --port 8000
     ports:
       - "127.0.0.1:8000:8000"
+    networks: [mirai]
 
   trader:
     image: ghcr.io/${GITHUB_OWNER}/mirai-trader:${TAG:-latest}

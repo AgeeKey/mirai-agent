@@ -30,39 +30,35 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e
-            mkdir -p /opt/mirai
             cd /opt/mirai
 
-            # Отладка: проверяем, что файлы скопированы в нужные места
-            echo "PWD: $(pwd)"
-            ls -la || true
-            echo "--- infra contents ---"
-            ls -la infra || true
-
-            # генерим .env.production из секретов
+            # cобираем финальный .env.production из GitHub Secrets
             cat > .env.production << 'EOF'
+            # === Common ===
             ENVIRONMENT=${{ secrets.ENVIRONMENT }}
             OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
             TELEGRAM_CHAT_ID_ADMIN=${{ secrets.TELEGRAM_CHAT_ID_ADMIN }}
+
+            # === Web Panel / API ===
             WEB_USER=${{ secrets.WEB_USER }}
             WEB_PASS=${{ secrets.WEB_PASS }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
-            NEXT_PUBLIC_SITE_URL=https://${{ secrets.DOMAIN_STUDIO }}
+            WEB_PORT=8000
+
+            # === Trader ===
             BINANCE_API_KEY=${{ secrets.BINANCE_API_KEY }}
             BINANCE_API_SECRET=${{ secrets.BINANCE_API_SECRET }}
-            WEB_PORT=8000
+
+            # === Services (Next.js) ===
+            NEXT_PUBLIC_SITE_URL=https://${{ secrets.DOMAIN_STUDIO }}
             EOF
 
-            OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-            export GITHUB_OWNER="$OWNER_LC"
+            # передаём owner/tag без локального .env
+            export GITHUB_OWNER="${{ github.repository_owner }}"
             export TAG="${{ github.event.inputs.tag || 'latest' }}"
 
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
-
-            # Копируем compose-файл в корень, чтобы env_file=.env.production резолвился корректно
-            cp -f infra/docker-compose.prod.yml ./docker-compose.prod.yml
-
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d
             docker system prune -f
