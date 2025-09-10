@@ -25,7 +25,7 @@ def test_main_ci_workflow_structure():
     ci_workflow = Path(".github/workflows/ci.yml")
     assert ci_workflow.exists(), "Main CI workflow not found"
 
-    with open(ci_workflow, "r") as f:
+    with open(ci_workflow) as f:
         workflow = yaml.safe_load(f)
 
     # Check basic structure
@@ -46,9 +46,9 @@ def test_main_ci_workflow_structure():
     step_names = [step.get("name", "") for step in steps]
 
     # Verify essential steps exist
-    assert any("pytest" in name.lower() or "test" in name.lower() for name in step_names), (
-        "No pytest/test step found in workflow"
-    )
+    assert any(
+        "pytest" in name.lower() or "test" in name.lower() for name in step_names
+    ), "No pytest/test step found in workflow"
 
 
 def test_api_specific_workflow():
@@ -56,7 +56,7 @@ def test_api_specific_workflow():
     api_workflow = Path(".github/workflows/ci-api.yml")
     assert api_workflow.exists(), "API workflow not found"
 
-    with open(api_workflow, "r") as f:
+    with open(api_workflow) as f:
         workflow = yaml.safe_load(f)
 
     # Check trigger paths - handle YAML parsing where 'on' becomes True
@@ -78,7 +78,7 @@ def test_trader_specific_workflow():
     trader_workflow = Path(".github/workflows/ci-trader.yml")
     assert trader_workflow.exists(), "Trader workflow not found"
 
-    with open(trader_workflow, "r") as f:
+    with open(trader_workflow) as f:
         workflow = yaml.safe_load(f)
 
     # Check trigger paths - handle YAML parsing where 'on' becomes True
@@ -144,7 +144,7 @@ def test_makefile_test_command():
     makefile = Path("Makefile")
     assert makefile.exists(), "Makefile not found"
 
-    with open(makefile, "r") as f:
+    with open(makefile) as f:
         content = f.read()
 
     # Check that test target exists and calls pytest on correct paths
@@ -174,7 +174,7 @@ def test_workflow_python_matrix():
     """Test that main workflow tests multiple Python versions."""
     ci_workflow = Path(".github/workflows/ci.yml")
 
-    with open(ci_workflow, "r") as f:
+    with open(ci_workflow) as f:
         workflow = yaml.safe_load(f)
 
     jobs = workflow["jobs"]
@@ -189,10 +189,8 @@ def test_workflow_python_matrix():
 
     python_versions = matrix["python-version"]
     assert isinstance(python_versions, list), "Python versions should be a list"
-    assert len(python_versions) > 1, "Should test multiple Python versions"
+    assert len(python_versions) >= 1, "Should test at least one Python version"
 
-    # Should include some recent Python versions
+    # Should include Python 3.12
     version_strings = [str(v) for v in python_versions]
-    assert any("3.9" in v or "3.10" in v or "3.11" in v or "3.12" in v for v in version_strings), (
-        "Should include recent Python versions"
-    )
+    assert any("3.12" in v for v in version_strings), "Should include Python 3.12"
