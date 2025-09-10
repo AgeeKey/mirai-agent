@@ -151,11 +151,33 @@ class TelegramBot:
         self.application = Application.builder().token(token).build()
 
         # Add command handlers
+        self.application.add_handler(CommandHandler("start", self.start_command))
         self.application.add_handler(CommandHandler("status", self.status_command))
+        self.application.add_handler(CommandHandler("risk", self.risk_command))
         self.application.add_handler(CommandHandler("pause", self.pause_command))
         self.application.add_handler(CommandHandler("resume", self.resume_command))
         self.application.add_handler(CommandHandler("kill", self.kill_command))
         self.application.add_handler(CommandHandler("mode", self.mode_command))
+
+    async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /start command - welcome message and commands help"""
+        message = """🌙 *Welcome to Mirai Agent*
+
+I'm your crypto trading bot assistant. Here's what I can do:
+
+📊 `/status` - Get current trading status and performance
+🎯 `/risk` - View risk management settings
+⏸️ `/pause` - Pause trading operations  
+▶️ `/resume` - Resume trading operations
+🔧 `/mode <advisor|semi|auto>` - Change trading mode
+💥 `/kill <symbol>` - Emergency stop for a symbol
+
+*Current Mode:* `DRY_RUN` for safety
+*Network:* `TESTNET` for testing
+
+Use /status to see detailed information."""
+
+        await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
 
     async def status_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /status command - return JSON summary from Risk Engine"""
@@ -209,6 +231,47 @@ Use /mode <advisor|semi|auto> to change mode"""
         except Exception as e:
             logger.error(f"Error in status command: {e}")
             await update.message.reply_text(f"❌ Error getting status: {str(e)}")
+
+    async def risk_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /risk command - show risk management settings"""
+        try:
+            risk_engine = get_risk_engine()
+            
+            # Get current risk configuration
+            risk_config = {
+                "MAX_TRADES_PER_DAY": 10,
+                "COOLDOWN_SEC": 300,
+                "DAILY_MAX_LOSS_USDT": 100.0,
+                "DAILY_TRAIL_DRAWDOWN": 0.05,
+                "ADVISOR_THRESHOLD": 0.6
+            }
+            
+            # Get current day state
+            now_utc = datetime.now(timezone.utc)
+            day_state = risk_engine.get_day_state(now_utc)
+
+            message = f"""🛡️ *Risk Management Settings*
+
+📊 *Current Limits:*
+• Max Trades/Day: `{risk_config["MAX_TRADES_PER_DAY"]}`
+• Cooldown Period: `{risk_config["COOLDOWN_SEC"]}s`
+• Max Daily Loss: `${risk_config["DAILY_MAX_LOSS_USDT"]}`
+• Trail Drawdown: `{risk_config["DAILY_TRAIL_DRAWDOWN"]*100:.1f}%`
+• Advisor Threshold: `{risk_config["ADVISOR_THRESHOLD"]*100:.0f}%`
+
+📈 *Today's Status:*
+• Trades Executed: `{day_state.trades_today}`
+• Day P&L: `${day_state.day_pnl:.2f}`
+• Max Day P&L: `${day_state.max_day_pnl:.2f}`
+• Consecutive Losses: `{day_state.consecutive_losses}`
+
+🔧 Risk settings can be modified via the web panel."""
+
+            await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
+
+        except Exception as e:
+            logger.error(f"Error in risk command: {e}")
+            await update.message.reply_text(f"❌ Error getting risk info: {str(e)}")
 
     async def pause_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /pause command - pause trading"""
