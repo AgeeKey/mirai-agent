@@ -15,6 +15,8 @@ import yaml
 # Add the app directory to the Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from datetime import UTC
+
 from agent.loop import AgentLoop
 from trader.binance_client import BinanceClient
 from trader.orders import OrderManager
@@ -224,12 +226,12 @@ def risk_status():
     """Print current risk engine day state as JSON"""
     try:
         import json
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         from trader.risk_engine import get_risk_engine
 
         risk_engine = get_risk_engine()
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(UTC)
         day_state = risk_engine.get_day_state(now_utc)
 
         # Convert to dict for JSON serialization

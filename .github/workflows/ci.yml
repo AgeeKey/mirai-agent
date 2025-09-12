@@ -18,7 +18,7 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     
@@ -26,21 +26,22 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest-cov pytest-xdist
+        pip install pytest-cov pytest-xdist ruff black mypy
     
     - name: Create logs directory
       run: mkdir -p logs
     
-    - name: Lint with flake8
+    - name: Lint with ruff
       run: |
-        # Stop the build if there are Python syntax errors or undefined names
-        flake8 app/ --count --select=E9,F63,F7,F82 --show-source --statistics
-        # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 app/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        ruff check app/ --output-format=github
     
     - name: Format check with black
       run: |
         black --check app/ --diff
+    
+    - name: Type check with mypy
+      run: |
+        mypy app/ --ignore-missing-imports --no-strict-optional
     
     - name: Run tests with pytest
       run: |

@@ -7,7 +7,7 @@ context for auditing and analysis.
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -55,7 +55,7 @@ class ExplainabilityLogger:
             deny_reason: Reason for denial if not accepted
             additional_context: Extra context data
         """
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(UTC).isoformat()
 
         # Build log entry
         log_entry = {
@@ -127,7 +127,7 @@ class ExplainabilityLogger:
             Dictionary with daily statistics
         """
         if date_str is None:
-            date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            date_str = datetime.now(UTC).strftime("%Y-%m-%d")
 
         stats = {
             "date": date_str,

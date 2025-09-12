@@ -7,7 +7,7 @@ import asyncio
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 # Add the app directory to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -161,7 +161,7 @@ class TelegramBot:
         """Handle /status command - return JSON summary from Risk Engine"""
         try:
             risk_engine = get_risk_engine()
-            now_utc = datetime.now(timezone.utc)
+            now_utc = datetime.now(UTC)
             day_state = risk_engine.get_day_state(now_utc)
 
             # Get open positions count (mock for now)
@@ -193,13 +193,13 @@ class TelegramBot:
 💰 Day PnL: `{status_data["day_pnl"]:.2f}`
 📈 Max Day PnL: `{status_data["max_day_pnl"]:.2f}`
 📊 Trades Today: `{status_data["trades_today"]}`
-❌ Consecutive Losses: ````{status_data["consecutive_losses"]}`
+❌ Consecutive Losses: ``````{status_data["consecutive_losses"]}`
 🏪 Open Positions: `{status_data["open_positions"]}`
 🎯 Trading Mode: `{status_data["trading_mode"]}`
 ⏸️ Agent Paused: `{status_data["agent_paused"]}`
 
 🤖 *AI Advisor*
-Score: `e: `e: `e: `{status_data["last_score"]:.3f}`
+Score: `e: `e: `e: `e: `e: `{status_data["last_score"]:.3f}`
 Rationale: _{status_data["last_rationale"]}_
 
 Use /mode <advisor|semi|auto> to change mode"""

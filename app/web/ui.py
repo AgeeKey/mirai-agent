@@ -173,7 +173,7 @@ HTML_TEMPLATE = """
         function updateStatusDisplay(status) {
             const grid = document.getElementById('statusGrid');
             const isPaused = status.agentPaused;
-            
+
             grid.innerHTML = `
                 <div class="status-card ${isPaused ? 'paused' : 'active'}">
                     <h3>Status</h3>

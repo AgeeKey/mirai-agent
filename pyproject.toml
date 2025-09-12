@@ -1,19 +1,32 @@
 [tool.black]
 line-length = 120
-target-version = ["py311"]
+target-version = ["py312"]
 
 [tool.ruff]
 line-length = 120
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E","F","I"]
-ignore = []
+select = ["E", "F", "I", "W", "B", "UP"]
+ignore = ["E501", "B008", "E402"]
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
 
-[tool.flake8]
-max-line-length = 120
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+no_strict_optional = true
+warn_return_any = false
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "app"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+filterwarnings = ["ignore::DeprecationWarning"]

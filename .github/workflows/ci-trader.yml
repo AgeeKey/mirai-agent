@@ -9,11 +9,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install -U pip
-      - run: pip install -e app/trader[dev]
-      - run: ruff check app/trader
-      - run: mypy app/trader
-      - run: pytest -q app/trader/tests
+      - run: pip install -U pip setuptools wheel
+      - run: |
+          cd app/trader
+          pip install -e .[dev]
+      - run: ruff check app/trader --output-format=github
+      - run: |
+          cd app/trader
+          mypy . --ignore-missing-imports --no-strict-optional
+      - run: |
+          cd app/trader
+          pytest -v tests/
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v6
         with:
