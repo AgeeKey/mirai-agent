@@ -19,9 +19,9 @@ jobs:
 
       - name: Compute lowercase owner
         id: vars
-        run: echo "owner_lc=${OWNER,,}" >> $GITHUB_OUTPUT
+        run: echo "owner_lc=${ACTOR,,}" >> $GITHUB_OUTPUT
         env:
-          OWNER: ${{ github.repository_owner }}
+          ACTOR: ${{ github.actor }}
 
       - name: Extract metadata
         id: meta
