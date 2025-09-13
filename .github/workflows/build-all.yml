@@ -1,6 +1,11 @@
 name: Build All Images
 on:
   workflow_dispatch: {}
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -18,6 +23,21 @@ jobs:
         env:
           OWNER: ${{ github.repository_owner }}
 
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ steps.vars.outputs.owner_lc }}/mirai-api
+            ghcr.io/${{ steps.vars.outputs.owner_lc }}/mirai-trader  
+            ghcr.io/${{ steps.vars.outputs.owner_lc }}/mirai-services
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -30,18 +50,27 @@ jobs:
         with:
           context: app/api
           push: true
-          tags: ghcr.io/${{ steps.vars.outputs.owner_lc }}/mirai-api:latest
+          tags: |
+            ghcr.io/${{ steps.vars.outputs.owner_lc }}/mirai-api:latest
+            ${{ startsWith(github.ref, 'refs/tags/v') && format('ghcr.io/{0}/mirai-api:{1}', steps.vars.outputs.owner_lc, github.ref_name) || '' }}
+          labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build & Push Trader
         uses: docker/build-push-action@v6
         with:
           context: app/trader
           push: true
-          tags: ghcr.io/${{ steps.vars.outputs.owner_lc }}/mirai-trader:latest
+          tags: |
+            ghcr.io/${{ steps.vars.outputs.owner_lc }}/mirai-trader:latest
+            ${{ startsWith(github.ref, 'refs/tags/v') && format('ghcr.io/{0}/mirai-trader:{1}', steps.vars.outputs.owner_lc, github.ref_name) || '' }}
+          labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build & Push Services
         uses: docker/build-push-action@v6
         with:
           context: web/services
           push: true
-          tags: ghcr.io/${{ steps.vars.outputs.owner_lc }}/mirai-services:latest
+          tags: |
+            ghcr.io/${{ steps.vars.outputs.owner_lc }}/mirai-services:latest
+            ${{ startsWith(github.ref, 'refs/tags/v') && format('ghcr.io/{0}/mirai-services:{1}', steps.vars.outputs.owner_lc, github.ref_name) || '' }}
+          labels: ${{ steps.meta.outputs.labels }}
