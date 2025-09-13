@@ -7,7 +7,7 @@ import asyncio
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 # Add the app directory to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -167,7 +167,7 @@ I'm your crypto trading bot assistant. Here's what I can do:
 
 📊 `/status` - Get current trading status and performance
 🎯 `/risk` - View risk management settings
-⏸️ `/pause` - Pause trading operations  
+⏸️ `/pause` - Pause trading operations
 ▶️ `/resume` - Resume trading operations
 🔧 `/mode <advisor|semi|auto>` - Change trading mode
 💥 `/kill <symbol>` - Emergency stop for a symbol
@@ -183,7 +183,7 @@ Use /status to see detailed information."""
         """Handle /status command - return JSON summary from Risk Engine"""
         try:
             risk_engine = get_risk_engine()
-            now_utc = datetime.now(timezone.utc)
+            now_utc = datetime.now(UTC)
             day_state = risk_engine.get_day_state(now_utc)
 
             # Get open positions count (mock for now)
@@ -236,7 +236,7 @@ Use /mode <advisor|semi|auto> to change mode"""
         """Handle /risk command - show risk management settings"""
         try:
             risk_engine = get_risk_engine()
-            
+
             # Get current risk configuration
             risk_config = {
                 "MAX_TRADES_PER_DAY": 10,
@@ -245,9 +245,9 @@ Use /mode <advisor|semi|auto> to change mode"""
                 "DAILY_TRAIL_DRAWDOWN": 0.05,
                 "ADVISOR_THRESHOLD": 0.6
             }
-            
+
             # Get current day state
-            now_utc = datetime.now(timezone.utc)
+            now_utc = datetime.now(UTC)
             day_state = risk_engine.get_day_state(now_utc)
 
             message = f"""🛡️ *Risk Management Settings*

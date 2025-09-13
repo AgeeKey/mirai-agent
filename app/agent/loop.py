@@ -5,7 +5,7 @@ Main agent loop for trading decisions
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 # Add the app directory to the Python path for CLI usage
@@ -121,7 +121,7 @@ class AgentLoop:
         # Check if we have consecutive losses from risk engine
         try:
             risk_engine = get_risk_engine()
-            now_utc = datetime.now(timezone.utc)
+            now_utc = datetime.now(UTC)
             day_state = risk_engine.get_day_state(now_utc)
 
             # If no consecutive losses, reset recovery tries and allow
@@ -175,7 +175,7 @@ class AgentLoop:
                 "rationale": "Agent is paused",
                 "intent": "HOLD",
                 "action": "HOLD",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "symbol": symbol,
             }
 
@@ -187,7 +187,7 @@ class AgentLoop:
                 price=float(market_data_dict.get("price", 0)),
                 volume=float(market_data_dict.get("volume", 0)),
                 change_24h=float(market_data_dict.get("change_24h", 0)),
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
             )
 
             # Build features for advisor
@@ -257,7 +257,7 @@ class AgentLoop:
             # Check Risk Engine gates before proposing order (only if advisor approved)
             if final_decision.action != "HOLD":
                 risk_engine = get_risk_engine()
-                now_utc = datetime.now(timezone.utc)
+                now_utc = datetime.now(UTC)
 
                 # Get account state for position checking
                 try:
@@ -295,7 +295,7 @@ class AgentLoop:
 
             # Store decision in history with advisor info
             decision_dict = final_decision.model_dump()
-            decision_dict["timestamp"] = datetime.now(timezone.utc).isoformat()
+            decision_dict["timestamp"] = datetime.now(UTC).isoformat()
             decision_dict["symbol"] = symbol
             decision_dict["advisor_score"] = advisor_result["score"]
             decision_dict["advisor_rationale"] = advisor_result["rationale"]
@@ -314,7 +314,7 @@ class AgentLoop:
                 "rationale": f"Error in decision making: {str(e)}",
                 "intent": "HOLD",
                 "action": "HOLD",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "symbol": symbol,
                 "advisor_score": 0.0,
                 "advisor_rationale": "Error occurred",
@@ -377,7 +377,7 @@ class AgentLoop:
             # Record simulated fill in DRY_RUN mode for Risk Engine
             if hasattr(self.trading_client, "dry_run") and self.trading_client.dry_run:
                 risk_engine = get_risk_engine()
-                now_utc = datetime.now(timezone.utc)
+                now_utc = datetime.now(UTC)
 
                 # Mock PnL calculation for simulation
                 mock_pnl = 0.0  # Default to breakeven
