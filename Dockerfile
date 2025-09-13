@@ -1,5 +1,5 @@
 # Multi-stage build for Mirai Agent Web Panel
-FROM python:3.11-slim AS base
+FROM python:3.12-slim AS base
 
 # Set working directory
 WORKDIR /app
