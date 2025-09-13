@@ -24,7 +24,7 @@ export default function RiskPage() {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const data = await apiClient.get('/risk/config');
+        const data = await apiClient.get<RiskConfig>('/risk/config');
         setConfig(data.data);
         setEditedConfig(data.data);
       } catch (err) {
@@ -45,7 +45,7 @@ export default function RiskPage() {
     setSuccessMessage('');
 
     try {
-      const updatedConfig = await apiClient.patch('/risk/config', editedConfig);
+      const updatedConfig = await apiClient.patch<RiskConfig>('/risk/config', editedConfig);
       setConfig(updatedConfig.data);
       setEditedConfig(updatedConfig.data);
       setSuccessMessage('Risk configuration updated successfully!');

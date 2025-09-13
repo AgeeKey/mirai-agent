@@ -30,9 +30,9 @@ export default function DashboardPage() {
     const fetchData = async () => {
       try {
         const [statusData, ordersData, logsData] = await Promise.all([
-          apiClient.get('/status'),
-          apiClient.get('/orders/recent?limit=5'),
-          apiClient.get('/logs/tail?lines=10')
+          apiClient.get<StatusData>('/status'),
+          apiClient.get<OrderData>('/orders/recent?limit=5'),
+          apiClient.get<{logs: string[]}>('/logs/tail?lines=10')
         ]);
         
         setStatus(statusData.data);

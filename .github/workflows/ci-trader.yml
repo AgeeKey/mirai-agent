@@ -21,7 +21,7 @@ jobs:
       - run: ruff check app/trader --output-format=github
       - run: |
           cd app/trader
-          mypy . --ignore-missing-imports --no-strict-optional
+          mypy . --ignore-missing-imports --no-strict-optional --explicit-package-bases
       - run: |
           cd app/trader
           pytest -v tests/

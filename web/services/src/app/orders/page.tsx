@@ -27,8 +27,8 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
       try {
         const [recentData, activeData] = await Promise.all([
-          apiClient.get('/orders/recent?limit=50'),
-          apiClient.get('/orders/active')
+          apiClient.get<{orders: Order[]}>('/orders/recent?limit=50'),
+          apiClient.get<{orders: Order[]}>('/orders/active')
         ]);
         
         setRecentOrders(recentData.data?.orders || []);
