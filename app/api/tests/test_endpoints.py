@@ -20,9 +20,9 @@ def test_get_risk_config():
     with patch.dict(os.environ, {"WEB_USER": "testuser", "WEB_PASS": "testpass"}):
         client = TestClient(app)
         headers = get_auth_headers()
-        
+
         response = client.get("/risk/config", headers=headers)
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "MAX_TRADES_PER_DAY" in data
@@ -36,10 +36,10 @@ def test_update_risk_config():
     with patch.dict(os.environ, {"WEB_USER": "testuser", "WEB_PASS": "testpass"}):
         client = TestClient(app)
         headers = get_auth_headers()
-        
+
         update_data = {"MAX_TRADES_PER_DAY": 15, "ADVISOR_THRESHOLD": 0.7}
         response = client.patch("/risk/config", json=update_data, headers=headers)
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["MAX_TRADES_PER_DAY"] == 15
@@ -51,9 +51,9 @@ def test_get_recent_orders():
     with patch.dict(os.environ, {"WEB_USER": "testuser", "WEB_PASS": "testpass"}):
         client = TestClient(app)
         headers = get_auth_headers()
-        
+
         response = client.get("/orders/recent", headers=headers)
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "orders" in data
@@ -66,9 +66,9 @@ def test_get_active_orders():
     with patch.dict(os.environ, {"WEB_USER": "testuser", "WEB_PASS": "testpass"}):
         client = TestClient(app)
         headers = get_auth_headers()
-        
+
         response = client.get("/orders/active", headers=headers)
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "orders" in data
@@ -80,9 +80,9 @@ def test_get_logs_tail():
     with patch.dict(os.environ, {"WEB_USER": "testuser", "WEB_PASS": "testpass"}):
         client = TestClient(app)
         headers = get_auth_headers()
-        
+
         response = client.get("/logs/tail?lines=50", headers=headers)
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "logs" in data
