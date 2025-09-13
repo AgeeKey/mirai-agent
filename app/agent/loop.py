@@ -19,11 +19,11 @@ from .schema import AgentDecision, MarketData, RiskParameters
 
 # Import risk engine with proper path handling
 try:
-    from ..trader.risk_engine import get_risk_engine
+    from ..trader.risk_engine import get_risk_engine  # type: ignore
 except ImportError:
     # Fallback for CLI usage
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-    from trader.risk_engine import get_risk_engine
+    from trader.risk_engine import get_risk_engine  # type: ignore
 
 
 logger = logging.getLogger(__name__)
@@ -38,14 +38,14 @@ class AgentLoop:
         self.trading_client = trading_client
         self.risk_params = risk_params or RiskParameters()
         self.policy = MockLLMPolicy(self.risk_params)
-        self.positions = []
-        self.decision_history = []
+        self.positions: list[Any] = []
+        self.decision_history: list[AgentDecision] = []
         self.paused = False  # Pause/resume functionality
         self.notifier = notifier  # Optional Telegram notifier
 
         # Advisor state
         self.advisor_config = load_advisor_config()
-        self.latest_advisor_result = None
+        self.latest_advisor_result: dict[str, Any] | None = None
         self.recovery_tries = 0  # Track recovery attempts after losses
 
         logger.info(f"AgentLoop initialized with advisor config: {self.advisor_config}")
@@ -197,7 +197,8 @@ class AgentLoop:
             advisor_result = get_signal_score(features)
             self.latest_advisor_result = advisor_result
             logger.info(
-                f"Advisor result: score={advisor_result['score']}, action={advisor_result['action']}, strategy={advisor_result['strategy']}"
+                f"Advisor result: score={advisor_result['score']}, action={advisor_result['action']}, "
+                f"strategy={advisor_result['strategy']}"
             )
 
             # Get base agent decision from policy
@@ -212,7 +213,10 @@ class AgentLoop:
                 # Check advisor threshold
                 if advisor_result["score"] < self.advisor_config["ADVISOR_THRESHOLD"]:
                     decision_accepted = False
-                    deny_reason = f"advisor_low_score ({advisor_result['score']:.3f} < {self.advisor_config['ADVISOR_THRESHOLD']})"
+                    deny_reason = (
+                        f"advisor_low_score ({advisor_result['score']:.3f} < "
+                        f"{self.advisor_config['ADVISOR_THRESHOLD']})"
+                    )
                 else:
                     # Check recovery logic if we have consecutive losses
                     recovery_allowed, recovery_reason = self._check_recovery_logic(advisor_result["score"])
@@ -234,6 +238,10 @@ class AgentLoop:
                     rationale=f"Advisor denied: {deny_reason}. {advisor_result['rationale']}",
                     intent="HOLD",
                     action="HOLD",
+                    target_price=None,
+                    stop_loss=None,
+                    take_profit=None,
+                    quantity=None,
                 )
                 final_rationale = final_decision.rationale
 
@@ -275,6 +283,10 @@ class AgentLoop:
                         rationale=f"Risk Engine rejection: {reason}",
                         intent="HOLD",
                         action="HOLD",
+                        target_price=None,
+                        stop_loss=None,
+                        take_profit=None,
+                        quantity=None,
                     )
                     final_rationale = final_decision.rationale
 
@@ -286,10 +298,17 @@ class AgentLoop:
                     rationale="Decision rejected due to risk management constraints",
                     intent="HOLD",
                     action="HOLD",
+                    target_price=None,
+                    stop_loss=None,
+                    take_profit=None,
+                    quantity=None,
                 )
                 final_rationale = final_decision.rationale
 
             # Store decision in history with advisor info
+            self.decision_history.append(final_decision)
+
+            # Create dict for return
             decision_dict = final_decision.model_dump()
             decision_dict["timestamp"] = datetime.now(UTC).isoformat()
             decision_dict["symbol"] = symbol
@@ -297,7 +316,6 @@ class AgentLoop:
             decision_dict["advisor_rationale"] = advisor_result["rationale"]
             decision_dict["advisor_strategy"] = advisor_result["strategy"]
             decision_dict["advisor_action"] = advisor_result["action"]
-            self.decision_history.append(decision_dict)
 
             logger.info(f"Decision made: {final_decision.intent} - {final_rationale}")
             return decision_dict
@@ -398,7 +416,8 @@ class AgentLoop:
                 )
 
                 logger.info(
-                    f"Recorded simulated fill: {symbol} {order_params['side']} {order_params['quantity']} PnL: {mock_pnl}"
+                    f"Recorded simulated fill: {symbol} {order_params['side']} "
+                    f"{order_params['quantity']} PnL: {mock_pnl}"
                 )
 
                 # Simulate SL/TP triggers for notification testing
@@ -437,11 +456,11 @@ class AgentLoop:
             }
 
         total_decisions = len(self.decision_history)
-        avg_score = sum(d["score"] for d in self.decision_history) / total_decisions
+        avg_score = sum(d.score for d in self.decision_history) / total_decisions
 
-        action_counts = {}
+        action_counts: dict[str, int] = {}
         for decision in self.decision_history:
-            action = decision["action"]
+            action = decision.action
             action_counts[action] = action_counts.get(action, 0) + 1
 
         # Get latest advisor info
@@ -451,11 +470,19 @@ class AgentLoop:
             "total_decisions": total_decisions,
             "avg_score": avg_score,
             "action_distribution": action_counts,
-            "latest_decision": latest_decision,
-            "advisor_score": latest_decision.get("advisor_score", 0.0),
-            "advisor_rationale": latest_decision.get("advisor_rationale", "No advisor data"),
-            "advisor_strategy": latest_decision.get("advisor_strategy", "none"),
-            "advisor_action": latest_decision.get("advisor_action", "HOLD"),
+            "latest_decision": latest_decision.model_dump(),
+            "advisor_score": self.latest_advisor_result.get("score", 0.0) if self.latest_advisor_result else 0.0,
+            "advisor_rationale": (
+                self.latest_advisor_result.get("rationale", "No advisor data")
+                if self.latest_advisor_result
+                else "No advisor data"
+            ),
+            "advisor_strategy": (
+                self.latest_advisor_result.get("strategy", "none") if self.latest_advisor_result else "none"
+            ),
+            "advisor_action": (
+                self.latest_advisor_result.get("action", "HOLD") if self.latest_advisor_result else "HOLD"
+            ),
             "recovery_tries": self.recovery_tries,
         }
 

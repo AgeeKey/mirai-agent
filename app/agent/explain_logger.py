@@ -90,7 +90,7 @@ class ExplainabilityLogger:
         Returns:
             List of decision dictionaries
         """
-        decisions = []
+        decisions: list[dict[str, Any]] = []
 
         try:
             if not self.log_path.exists():
@@ -129,7 +129,7 @@ class ExplainabilityLogger:
         if date_str is None:
             date_str = datetime.now(UTC).strftime("%Y-%m-%d")
 
-        stats = {
+        stats: dict[str, Any] = {
             "date": date_str,
             "total_decisions": 0,
             "accepted_decisions": 0,
@@ -167,7 +167,7 @@ class ExplainabilityLogger:
             )
 
             # Top rationales (by frequency)
-            rationale_counts = {}
+            rationale_counts: dict[str, int] = {}
             for decision in daily_decisions:
                 rationale = decision.get("rationale", "")[:50]  # First 50 chars
                 if rationale:
