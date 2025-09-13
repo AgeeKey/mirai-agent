@@ -9,6 +9,7 @@ on:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     
     strategy:
       matrix:
@@ -21,12 +22,14 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
     
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest-cov pytest-xdist ruff black mypy
+        pip install --timeout 300 --retries 3 -r requirements.txt
+        pip install --timeout 300 --retries 3 pytest-cov pytest-xdist ruff black mypy
+      timeout-minutes: 15
     
     - name: Create logs directory
       run: mkdir -p logs

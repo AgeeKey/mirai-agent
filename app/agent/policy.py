@@ -84,8 +84,8 @@ class MockLLMPolicy:
         return AgentDecision(
             score=min(1.0, base_score),
             rationale=template["rationale"],
-            intent=template["intent"],
-            action=template["action"],
+            intent=template["intent"],  # type: ignore
+            action=template["action"],  # type: ignore
             target_price=target_price,
             stop_loss=stop_loss,
             take_profit=take_profit,
