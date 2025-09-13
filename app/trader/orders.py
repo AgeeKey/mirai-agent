@@ -42,8 +42,8 @@ class OrderManager:
     def __init__(self, client: BinanceClient):
         self.client = client
         self.exchange_info = ExchangeInfo()
-        self.active_orders = {}
-        self.order_history = []
+        self.active_orders: dict = {}
+        self.order_history: list = []
 
     def place_market_order_with_sltp(
         self,

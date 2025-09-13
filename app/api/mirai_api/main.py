@@ -55,7 +55,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) 
 
 
 def get_current_user(payload: dict = Depends(verify_token)) -> User:
-    username: str = payload.get("sub")
+    username = payload.get("sub")
     if username is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     return User(username=username)

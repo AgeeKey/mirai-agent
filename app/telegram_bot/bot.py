@@ -22,13 +22,13 @@ except ImportError:
     TELEGRAM_AVAILABLE = False
 
     # Create dummy classes for graceful degradation
-    class Update:
+    class Update:  # type: ignore[no-redef]
         pass
 
-    class ContextTypes:
+    class ContextTypes:  # type: ignore[no-redef]
         DEFAULT_TYPE = None
 
-    class ParseMode:
+    class ParseMode:  # type: ignore[no-redef]
         MARKDOWN = "Markdown"
 
 
@@ -49,7 +49,7 @@ class TelegramNotifier:
         self.token = token
         self.chat_id = chat_id
         self.bot = None
-        self._enabled = TELEGRAM_AVAILABLE and token and chat_id
+        self._enabled = TELEGRAM_AVAILABLE and bool(token) and bool(chat_id)
 
         if self._enabled:
             self.bot = Bot(token=token)
@@ -138,7 +138,7 @@ class TelegramBot:
         self.chat_id = chat_id
         self.agent_loop = agent_loop
         self.application = None
-        self._enabled = TELEGRAM_AVAILABLE and token and chat_id
+        self._enabled = TELEGRAM_AVAILABLE and bool(token) and bool(chat_id)
 
         # Trading mode state (for /mode command)
         self.trading_mode = "auto"  # advisor, semi, auto
@@ -243,7 +243,7 @@ Use /mode <advisor|semi|auto> to change mode"""
                 "COOLDOWN_SEC": 300,
                 "DAILY_MAX_LOSS_USDT": 100.0,
                 "DAILY_TRAIL_DRAWDOWN": 0.05,
-                "ADVISOR_THRESHOLD": 0.6
+                "ADVISOR_THRESHOLD": 0.6,
             }
 
             # Get current day state
