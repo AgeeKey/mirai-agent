@@ -4,11 +4,9 @@ on:
   push:
     tags:
       - 'v*'
-  release:
-    types: [published]
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -31,22 +29,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Compute lowercase owner
-        id: vars
-        run: echo "owner_lc=${OWNER,,}" >> $GITHUB_OUTPUT
-        env:
-          OWNER: ${{ github.repository_owner }}
-
       - name: Extract version
         id: version
         run: |
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-          else
-            VERSION=latest
-          fi
+          VERSION=${GITHUB_REF#refs/tags/}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "is_release=${{ startsWith(github.ref, 'refs/tags/v') }}" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -58,38 +45,31 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ steps.vars.outputs.owner_lc }}/${{ matrix.image }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=latest,enable={{is_default_branch}}
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:${{ steps.version.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   create-release:
-    if: startsWith(github.ref, 'refs/tags/v')
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -97,12 +77,12 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') }}
           generate_release_notes: true
           body: |
-            ## 🚀 Mirai Agent Release ${{ github.ref_name }}
+            ## 🚀 Mirai Agent Release ${{ steps.version.outputs.version }}
             
             ### Docker Images
-            - `ghcr.io/${{ github.repository_owner }}/mirai-api:${{ github.ref_name }}`
-            - `ghcr.io/${{ github.repository_owner }}/mirai-trader:${{ github.ref_name }}`
-            - `ghcr.io/${{ github.repository_owner }}/mirai-services:${{ github.ref_name }}`
+            - `ghcr.io/${{ github.repository_owner }}/mirai-api:${{ steps.version.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/mirai-trader:${{ steps.version.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/mirai-services:${{ steps.version.outputs.version }}`
             
             ### Latest Images
             - `ghcr.io/${{ github.repository_owner }}/mirai-api:latest`
