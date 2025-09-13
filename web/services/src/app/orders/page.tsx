@@ -31,8 +31,8 @@ export default function OrdersPage() {
           apiClient.get('/orders/active')
         ]);
         
-        setRecentOrders(recentData.orders || []);
-        setActiveOrders(activeData.orders || []);
+        setRecentOrders(recentData.data?.orders || []);
+        setActiveOrders(activeData.data?.orders || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch orders');
       } finally {

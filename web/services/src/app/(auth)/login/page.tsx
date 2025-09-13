@@ -17,7 +17,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      await apiClient.login(username, password);
+      await apiClient.login({ username, password });
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');

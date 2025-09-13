@@ -35,9 +35,9 @@ export default function DashboardPage() {
           apiClient.get('/logs/tail?lines=10')
         ]);
         
-        setStatus(statusData);
-        setOrders(ordersData);
-        setLogs(logsData.logs || []);
+        setStatus(statusData.data);
+        setOrders(ordersData.data);
+        setLogs(logsData.data?.logs || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch data');
       } finally {
@@ -94,7 +94,7 @@ export default function DashboardPage() {
               </Link>
               <button 
                 onClick={() => {
-                  apiClient.clearToken();
+                  apiClient.logout();
                   window.location.href = '/login';
                 }}
                 className="text-red-600 hover:text-red-800"

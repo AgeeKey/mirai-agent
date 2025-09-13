@@ -25,8 +25,8 @@ export default function RiskPage() {
     const fetchConfig = async () => {
       try {
         const data = await apiClient.get('/risk/config');
-        setConfig(data);
-        setEditedConfig(data);
+        setConfig(data.data);
+        setEditedConfig(data.data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch config');
       } finally {
@@ -46,8 +46,8 @@ export default function RiskPage() {
 
     try {
       const updatedConfig = await apiClient.patch('/risk/config', editedConfig);
-      setConfig(updatedConfig);
-      setEditedConfig(updatedConfig);
+      setConfig(updatedConfig.data);
+      setEditedConfig(updatedConfig.data);
       setSuccessMessage('Risk configuration updated successfully!');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update config');
