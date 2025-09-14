@@ -1,0 +1,61 @@
+name: Deploy to Server
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag to deploy"
+        required: false
+        default: "latest"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Upload compose + env template
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "infra/docker-compose.prod.yml"
+          target: "/opt/mirai"
+
+      - name: Provision & Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/mirai
+
+            # генерируем .env.production
+            cat > .env.production << 'EOF'
+            ENVIRONMENT=${{ secrets.ENVIRONMENT }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+            TELEGRAM_CHAT_ID_ADMIN=${{ secrets.TELEGRAM_CHAT_ID_ADMIN }}
+
+            WEB_USER=${{ secrets.WEB_USER }}
+            WEB_PASS=${{ secrets.WEB_PASS }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            WEB_PORT=8000
+
+            BINANCE_API_KEY=${{ secrets.BINANCE_API_KEY }}
+            BINANCE_API_SECRET=${{ secrets.BINANCE_API_SECRET }}
+
+            NEXT_PUBLIC_SITE_URL=https://${{ secrets.DOMAIN_STUDIO }}
+            EOF
+
+            # Преобразуем owner в lowercase для Docker
+            OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+            export GITHUB_OWNER="$OWNER_LC"
+            export TAG="latest"
+
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
+            docker system prune -f

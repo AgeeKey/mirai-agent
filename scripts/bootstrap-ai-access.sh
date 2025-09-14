@@ -7,7 +7,14 @@ log() { printf "\033[1;36m[bootstrap]\033[0m %s\n" "$*"; }
 fail() { printf "\033[1;31m[error]""\033[0m %s\n" "$*" >&2; exit 1; }
 
 # --- Required envs ---------------------------------------------------------
-: "${GH_TOKEN:?GH_TOKEN is required (scopes: repo, workflow, write:packages)}"
+# Accept CODEX as a fallback for GH_TOKEN if provided
+if [[ -z "${GH_TOKEN:-}" && -n "${CODEX:-}" ]]; then
+  export GH_TOKEN="$CODEX"
+fi
+if [[ -z "${GH_TOKEN:-}" ]]; then
+  printf "\033[1;31m[error]\033[0m %s\n" "GH_TOKEN is required (scopes: repo, workflow, write:packages). You can also set CODEX as an alias." >&2
+  exit 1
+fi
 : "${SSH_HOST:?SSH_HOST is required}"
 : "${SSH_USER:?SSH_USER is required}"
 if [[ -z "${SSH_KEY:-}" && -z "${SSH_KEY_B64:-}" ]]; then
@@ -95,4 +102,3 @@ log "Secrets summary:"
 [[ -n "$WEB_USER" && -n "$WEB_PASS" ]] && log "  ✔ Web basic auth creds set"
 
 log "GitHub, Docker, SSH, and integrations bootstrap complete ✅"
-

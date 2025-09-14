@@ -1,0 +1,63 @@
+name: CI Services
+
+on:
+  push:
+    paths:
+      - 'web/services/**'
+      - '.github/workflows/ci-services.yml'
+  pull_request:
+    paths:
+      - 'web/services/**'
+      - '.github/workflows/ci-services.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: web/services
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/services/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Run ESLint
+        run: npx eslint . --ext .ts,.tsx,.js,.jsx --max-warnings 0
+
+      - name: Run Prettier check
+        run: npx prettier --check .
+
+      - name: Build application
+        run: npm run build
+
+      - name: Run tests (if available)
+        run: |
+          if [ -f "package.json" ] && grep -q '"test"' package.json; then
+            npm test
+          else
+            echo "No tests found, skipping..."
+          fi
+
+      - name: Upload build artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: services-build-logs
+          path: |
+            web/services/.next/
+            web/services/npm-debug.log*
+          retention-days: 5

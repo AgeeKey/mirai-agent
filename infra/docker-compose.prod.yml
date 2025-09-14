@@ -42,7 +42,7 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     environment:
-      - NEXT_PUBLIC_API_BASE=https://aimirai.online
+      - NEXT_PUBLIC_API_BASE=${NEXT_PUBLIC_API_BASE}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s

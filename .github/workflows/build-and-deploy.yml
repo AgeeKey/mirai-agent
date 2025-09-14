@@ -109,13 +109,14 @@ jobs:
             echo "Creating backup..."
             docker compose -f docker-compose.prod.yml down --timeout 30
             
-            # Update environment
-            echo "TAG=${{ needs.build.outputs.version }}" > .env
-            echo "DOMAIN_STUDIO=${{ secrets.DOMAIN_STUDIO }}" >> .env
-            echo "DOMAIN_PANEL=${{ secrets.DOMAIN_PANEL }}" >> .env
-            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-            echo "WEB_USER=${{ secrets.WEB_USER }}" >> .env
-            echo "WEB_PASS=${{ secrets.WEB_PASS }}" >> .env
+          # Update environment
+          echo "TAG=${{ needs.build.outputs.version }}" > .env
+          echo "GITHUB_OWNER=${{ github.repository_owner }}" >> .env
+          echo "DOMAIN_STUDIO=${{ secrets.DOMAIN_STUDIO }}" >> .env
+          echo "DOMAIN_PANEL=${{ secrets.DOMAIN_PANEL }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "WEB_USER=${{ secrets.WEB_USER }}" >> .env
+          echo "WEB_PASS=${{ secrets.WEB_PASS }}" >> .env
             echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
             echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env
             echo "TELEGRAM_CHAT_ID_ADMIN=${{ secrets.TELEGRAM_CHAT_ID_ADMIN }}" >> .env
