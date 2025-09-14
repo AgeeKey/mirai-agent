@@ -24,9 +24,14 @@ warn_unused_configs = true
 disallow_untyped_defs = false
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "app"]
+testpaths = ["tests", "app/api/tests", "app/trader/tests", "app/telegram_bot/tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
-filterwarnings = ["ignore::DeprecationWarning"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PydanticDeprecatedSince20"
+]
+asyncio_mode = "auto"
+pythonpath = [".", "app/api", "app/trader", "app/telegram_bot"]

@@ -1,0 +1,274 @@
+# Consolidated CI/CD Pipeline for Mirai Agent
+name: CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*.*.*' ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deploy environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+permissions:
+  contents: read
+  packages: write
+  checks: write
+  pull-requests: write
+
+env:
+  REGISTRY: ghcr.io
+  OWNER: ${{ github.repository_owner }}
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.changes.outputs.api }}
+      trader: ${{ steps.changes.outputs.trader }}
+      services: ${{ steps.changes.outputs.services }}
+      telegram: ${{ steps.changes.outputs.telegram }}
+      core: ${{ steps.changes.outputs.core }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            api:
+              - 'app/api/**'
+            trader:
+              - 'app/trader/**'
+            services:
+              - 'web/services/**'
+            telegram:
+              - 'app/telegram_bot/**'
+            core:
+              - 'app/agent/**'
+              - 'app/cli.py'
+              - 'requirements.txt'
+              - 'pyproject.toml'
+
+  lint-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: detect-changes
+    if: needs.detect-changes.outputs.core == 'true' || needs.detect-changes.outputs.api == 'true' || needs.detect-changes.outputs.trader == 'true'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest-cov pytest-xdist ruff black mypy
+    
+    - name: Create required directories
+      run: mkdir -p logs state
+    
+    - name: Lint with ruff
+      run: ruff check app/ --output-format=github
+    
+    - name: Format check with black
+      run: black --check app/ --diff
+    
+    - name: Type check with mypy
+      run: mypy app/ --ignore-missing-imports --no-strict-optional
+      continue-on-error: true
+    
+    - name: Run tests
+      run: |
+        pytest tests/ app/*/tests/ -v \
+          --cov=app \
+          --cov-report=xml \
+          --cov-report=term \
+          --junit-xml=pytest-results.xml
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
+
+  test-services:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: detect-changes
+    if: needs.detect-changes.outputs.services == 'true'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: 'web/services/package-lock.json'
+    
+    - name: Install dependencies
+      run: |
+        cd web/services
+        npm ci --no-audit --no-fund
+    
+    - name: Lint and type check
+      run: |
+        cd web/services
+        npm run lint
+        npm run type-check
+    
+    - name: Build
+      run: |
+        cd web/services
+        npm run build
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [detect-changes, lint-and-test, test-services]
+    if: github.ref == 'refs/heads/main' || github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
+    
+    strategy:
+      matrix:
+        include:
+          - component: api
+            context: app/api
+            condition: ${{ needs.detect-changes.outputs.api == 'true' || github.ref_type == 'tag' }}
+          - component: trader
+            context: app/trader
+            condition: ${{ needs.detect-changes.outputs.trader == 'true' || github.ref_type == 'tag' }}
+          - component: services
+            context: web/services
+            condition: ${{ needs.detect-changes.outputs.services == 'true' || github.ref_type == 'tag' }}
+          - component: telegram
+            context: .
+            dockerfile: app/telegram_bot/Dockerfile
+            condition: ${{ needs.detect-changes.outputs.telegram == 'true' || github.ref_type == 'tag' }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Login to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.OWNER }}/mirai-${{ matrix.component }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push
+      if: ${{ matrix.condition }}
+      uses: docker/build-push-action@v6
+      with:
+        context: ${{ matrix.context }}
+        file: ${{ matrix.dockerfile || format('{0}/Dockerfile', matrix.context) }}
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    timeout-minutes: 20
+    if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to Server
+      uses: appleboy/ssh-action@v1.2.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          cd /opt/mirai
+          
+          # Backup current deployment
+          docker compose -f docker-compose.prod.yml down --timeout 30
+          
+          # Update environment
+          cat > .env << EOF
+          TAG=${{ github.ref_name || 'latest' }}
+          GITHUB_OWNER=${{ env.OWNER }}
+          DOMAIN_STUDIO=${{ secrets.DOMAIN_STUDIO }}
+          DOMAIN_PANEL=${{ secrets.DOMAIN_PANEL }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          WEB_USER=${{ secrets.WEB_USER }}
+          WEB_PASS=${{ secrets.WEB_PASS }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID_ADMIN=${{ secrets.TELEGRAM_CHAT_ID_ADMIN }}
+          NEXT_PUBLIC_API_BASE=https://${{ secrets.DOMAIN_PANEL }}
+          EOF
+          
+          # Pull and start services
+          docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d
+          
+          # Wait for services
+          sleep 30
+          
+          # Cleanup
+          docker system prune -af --volumes
+    
+    - name: Health Check
+      run: |
+        sleep 60
+        
+        # Check API
+        if curl -f "https://${{ secrets.DOMAIN_PANEL }}/healthz"; then
+          echo "✅ API healthy"
+        else
+          echo "❌ API failed"
+          exit 1
+        fi
+        
+        # Check Web UI
+        if curl -f "https://${{ secrets.DOMAIN_STUDIO }}"; then
+          echo "✅ Web UI healthy"
+        else
+          echo "❌ Web UI failed"
+          exit 1
+        fi
+    
+    - name: Notify deployment
+      if: success()
+      run: |
+        echo "🚀 Deployment completed successfully!"
+        echo "Version: ${{ github.ref_name || 'latest' }}"
+        echo "Studio: https://${{ secrets.DOMAIN_STUDIO }}"
+        echo "API: https://${{ secrets.DOMAIN_PANEL }}/docs"

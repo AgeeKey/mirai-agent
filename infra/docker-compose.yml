@@ -1,4 +1,4 @@
-# Docker Compose for Mirai Agent
+# Docker Compose for Mirai Agent Development
 version: '3.8'
 
 services:
@@ -26,13 +26,68 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - mirai
+
+  api:
+    build: 
+      context: ..
+      dockerfile: app/api/Dockerfile
+    ports:
+      - "8001:8000"
+    env_file:
+      - ../.env
+    volumes:
+      - ../state:/app/state
+      - ../logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - mirai
+
+  trader:
+    build: 
+      context: ..
+      dockerfile: app/trader/Dockerfile
+    env_file:
+      - ../.env
+    volumes:
+      - ../state:/app/state
+      - ../logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - mirai
+    depends_on:
+      - api
+
+  services:
+    build: 
+      context: ../web/services
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE=http://api:8000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - mirai
+    depends_on:
+      - api
 
   # Telegram bot service (commented out by default)
   # telegram:
   #   build: 
   #     context: ..
-  #     dockerfile: Dockerfile
-  #   command: ["python", "app/cli.py", "telegram-bot"]
+  #     dockerfile: app/telegram_bot/Dockerfile
   #   environment:
   #     - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
   #     - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
@@ -44,9 +99,11 @@ services:
   #     - ../state:/app/state
   #     - ../logs:/app/logs
   #   restart: unless-stopped
+  #   networks:
+  #     - mirai
   #   depends_on:
-  #     - web
+  #     - api
 
 networks:
-  default:
+  mirai:
     name: mirai-network
