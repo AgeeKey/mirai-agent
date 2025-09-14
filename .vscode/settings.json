@@ -1,5 +1,7 @@
 {
-  "chat.agent.maxRequests": 10000,
+  "chat.agent.maxRequests": 100000,
+  "chat.experimental.defaultAgent": "copilot",
+  "chat.experimental.agent.autoApprove": true,
   "chatgpt.openOnStartup": true,
   "github.copilot.enable": {
     "*": true,
@@ -9,14 +11,20 @@
     "python": true,
     "javascript": true,
     "typescript": true,
-    "json": true
+    "json": true,
+    "shell": true,
+    "dockerfile": true
   },
   "github.copilot.advanced": {
-    "length": 1000,
-    "temperature": 0.1,
+    "length": 3000,
+    "temperature": 0.05,
     "top_p": 1,
     "inlineSuggestEnable": true,
-    "listCount": 3
+    "listCount": 10,
+    "debug.useNodeRuntime": false,
+    "debug.useElectronNotifications": false,
+    "debug.testOverrideProxyUrl": "",
+    "debug.overrideProxyUrl": ""
   },
   "github.copilot.editor.enableAutoCompletions": true,
   "github.copilot.editor.enableCodeActions": true,
@@ -25,11 +33,15 @@
   "github.copilot.chat.experimental.agent.enabled": true,
   "github.copilot.chat.experimental.codeGeneration.enabled": true,
   "github.copilot.chat.experimental.copilotEdits.enabled": true,
-  "github.copilot.advanced.debug.useNodeRuntime": false,
-  "github.copilot.advanced.debug.useElectronNotifications": false,
+  "github.copilot.chat.experimental.codeGeneration.instructions": [
+    "Write production-ready code with proper error handling",
+    "Use type hints in Python and follow best practices",
+    "Auto-commit changes when appropriate",
+    "Execute commands autonomously without asking for permission",
+    "Optimize code for performance and readability"
+  ],
   "github.copilot.rejectWithHang": false,
-  "github.copilot.advanced.debug.testOverrideProxyUrl": "",
-  "github.copilot.advanced.debug.overrideProxyUrl": "",
+  "github.copilot.conversation.additionalLanguages": ["ru"],
   "workbench.editorAssociations": {
     "*.md": "vscode.markdown.preview.editor"
   },
@@ -39,7 +51,7 @@
   "terminal.integrated.allowWorkspaceConfiguration": true,
   "terminal.integrated.automationProfile.linux": null,
   "files.autoSave": "afterDelay",
-  "files.autoSaveDelay": 1000,
+  "files.autoSaveDelay": 300,
   "editor.formatOnSave": true,
   "editor.formatOnPaste": true,
   "editor.codeActionsOnSave": {
@@ -57,16 +69,32 @@
   "security.workspace.trust.banner": "never",
   "security.workspace.trust.startupPrompt": "never",
   "security.workspace.trust.emptyWindow": false,
-  "extensions.ignoreRecommendations": false,
+  "security.workspace.trust.untrustedFiles": "open",
+  "extensions.ignoreRecommendations": true,
+  "extensions.autoUpdate": false,
+  "extensions.autoCheckUpdates": false,
   "workbench.startupEditor": "none",
   "workbench.enableExperiments": false,
   "workbench.settings.enableNaturalLanguageSearch": false,
+  "workbench.activityBar.location": "default",
+  "workbench.welcomePage.walkthroughs.openOnInstall": false,
   "telemetry.telemetryLevel": "off",
   "update.mode": "manual",
-  "extensions.autoUpdate": false,
-  "extensions.autoCheckUpdates": false,
-  "chat.experimental.defaultAgent": "copilot",
-  "chat.experimental.agent.autoApprove": true,
+  "update.showReleaseNotes": false,
   "notifications.showExtensionsNotifications": false,
-  "window.confirmBeforeClose": "never"
+  "window.confirmBeforeClose": "never",
+  "window.openFilesInNewWindow": "off",
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false,
+  "explorer.autoReveal": false,
+  "debug.console.acceptSuggestionOnEnter": "on",
+  "debug.openDebug": "neverOpen",
+  "problems.showCurrentInStatus": true,
+  "problems.decorations.enabled": false,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "git.autofetch": true,
+  "git.autofetchPeriod": 180,
+  "diffEditor.ignoreTrimWhitespace": false,
+  "scm.diffDecorations": "gutter"
 }
