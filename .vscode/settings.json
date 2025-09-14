@@ -1,3 +1,58 @@
 {
-    "chat.agent.maxRequests": 10000
+  "chat.agent.maxRequests": 10000,
+  "github.copilot.enable": {
+    "*": true,
+    "yaml": true,
+    "plaintext": true,
+    "markdown": true,
+    "python": true,
+    "javascript": true,
+    "typescript": true,
+    "json": true
+  },
+  "github.copilot.advanced": {
+    "length": 1000,
+    "temperature": 0.1,
+    "top_p": 1,
+    "inlineSuggestEnable": true,
+    "listCount": 3
+  },
+  "github.copilot.editor.enableAutoCompletions": true,
+  "github.copilot.editor.enableCodeActions": true,
+  "github.copilot.chat.localeOverride": "ru",
+  "github.copilot.chat.welcomeMessage": "never",
+  "github.copilot.chat.experimental.codeGeneration.instructions": [
+    "Always write production-ready code",
+    "Follow Python PEP 8 and best practices", 
+    "Use type hints in Python",
+    "Write comprehensive docstrings",
+    "Handle errors gracefully",
+    "Use async/await where appropriate",
+    "Follow FastAPI conventions for API endpoints",
+    "Use Pydantic models for data validation"
+  ],
+  "workbench.editorAssociations": {
+    "*.md": "vscode.markdown.preview.editor"
+  },
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.confirmOnExit": "never",
+  "terminal.integrated.confirmOnKill": "never",
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "python.defaultInterpreterPath": "/usr/local/bin/python",
+  "python.formatting.provider": "black",
+  "python.linting.enabled": true,
+  "python.linting.ruffEnabled": true,
+  "python.linting.mypyEnabled": true,
+  "python.testing.pytestEnabled": true,
+  "python.testing.autoTestDiscoverOnSaveEnabled": true,
+  "security.workspace.trust.enabled": false,
+  "extensions.ignoreRecommendations": false,
+  "workbench.startupEditor": "none"
 }
