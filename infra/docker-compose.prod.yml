@@ -6,12 +6,33 @@ services:
     networks: [mirai]
     ports:
       - "127.0.0.1:8000:8000"
+    command: ["uvicorn", "mirai_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   trader:
     image: ghcr.io/${GITHUB_OWNER}/mirai-trader:${TAG:-latest}
     restart: unless-stopped
     env_file: .env.production
     networks: [mirai]
+    healthcheck:
+      test: ["CMD", "python", "-c", "print('ok')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   services:
     image: ghcr.io/${GITHUB_OWNER}/mirai-services:${TAG:-latest}
@@ -20,6 +41,29 @@ services:
     networks: [mirai]
     ports:
       - "127.0.0.1:3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE=${NEXT_PUBLIC_API_BASE}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  telegram_bot:
+    image: ghcr.io/${GITHUB_OWNER}/mirai-telegram:${TAG:-latest}
+    restart: unless-stopped
+    env_file: .env.production
+    networks: [mirai]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
 networks:
   mirai: {}

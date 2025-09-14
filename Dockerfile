@@ -1,5 +1,5 @@
 # Multi-stage build for Mirai Agent Web Panel
-FROM python:3.11-slim AS base
+FROM python:3.12-slim AS base
 
 # Set working directory
 WORKDIR /app
@@ -33,9 +33,12 @@ RUN useradd -m -u 1001 mirai && \
     chown -R mirai:mirai /app
 USER mirai
 
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/status || exit 1
 
-# Default command
-CMD ["uvicorn", "app.web.api:app", "--host", "127.0.0.1", "--port", "8000"]
+# Default command - use 0.0.0.0 for Docker networking
+CMD ["uvicorn", "app.web.api:app", "--host", "0.0.0.0", "--port", "8000"]

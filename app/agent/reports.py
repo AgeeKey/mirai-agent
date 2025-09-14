@@ -7,7 +7,7 @@ and decision analysis.
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -41,7 +41,7 @@ class AdvisorReports:
             Dictionary with daily report data
         """
         if date_str is None:
-            date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            date_str = datetime.now(UTC).strftime("%Y-%m-%d")
 
         logger.info(f"Generating daily advisor report for {date_str}")
 
@@ -51,7 +51,7 @@ class AdvisorReports:
         # Enhanced report with additional calculations
         report = {
             "report_date": date_str,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "summary": {
                 "total_decisions": daily_stats["total_decisions"],
                 "accepted_decisions": daily_stats["accepted_decisions"],
@@ -80,7 +80,7 @@ class AdvisorReports:
             Path to saved report file
         """
         if date_str is None:
-            date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            date_str = datetime.now(UTC).strftime("%Y-%m-%d")
 
         report = self.generate_daily_report(date_str)
 
@@ -214,7 +214,7 @@ ACTION BREAKDOWN
             Weekly summary dictionary
         """
         if end_date is None:
-            end_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            end_date = datetime.now(UTC).strftime("%Y-%m-%d")
 
         # This is a simplified weekly summary
         # In a full implementation, you'd aggregate multiple daily reports
@@ -222,7 +222,7 @@ ACTION BREAKDOWN
 
         return {
             "week_ending": end_date,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "daily_snapshot": daily_report,
             "note": "Weekly aggregation not yet implemented - showing daily snapshot",
         }

@@ -41,9 +41,7 @@ class BinanceClient:
             try:
                 if UMFutures:
                     base_url = "https://testnet.binancefuture.com" if testnet else None
-                    self.client = UMFutures(
-                        key=self.api_key, secret=self.secret_key, base_url=base_url
-                    )
+                    self.client = UMFutures(key=self.api_key, secret=self.secret_key, base_url=base_url)
                     logger.info(f"Initialized Binance client (testnet={testnet})")
                 else:
                     logger.warning("binance-connector not available, running in simulation mode")
@@ -338,9 +336,7 @@ class BinanceClient:
             quantity = abs(position_amt)
 
             # Place market order to close position
-            result = self.place_order(
-                symbol=symbol, side=side, quantity=quantity, order_type="MARKET"
-            )
+            result = self.place_order(symbol=symbol, side=side, quantity=quantity, order_type="MARKET")
 
             # Note: For real implementation, you'd set reduceOnly=True in the order params
             # but this requires specific binance-connector API support

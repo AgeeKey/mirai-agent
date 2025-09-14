@@ -4,16 +4,15 @@ Shared utilities for the web interface
 
 import logging
 import os
-
-# Adjust imports for the web module context
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
+# Adjust imports for the web module context
 app_root = Path(__file__).parent.parent
 sys.path.insert(0, str(app_root))
 
@@ -72,7 +71,7 @@ def get_safe_status_data() -> dict[str, Any]:
 
     try:
         risk_engine = get_risk_engine()
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(UTC)
         day_state = risk_engine.get_day_state(now_utc)
 
         # Get advisor data from last decision if available
@@ -108,7 +107,7 @@ def get_safe_status_data() -> dict[str, Any]:
     except Exception as e:
         logger.warning(f"Error getting status data: {e}")
         return {
-            "date": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "date": datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC"),
             "mode": agent_state["mode"],
             "dayPnL": 0.0,
             "maxDayPnL": 0.0,

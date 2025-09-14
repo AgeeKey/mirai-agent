@@ -174,7 +174,7 @@ class SignalAdvisor:
         """Build analysis prompt for OpenAI"""
         return f"""
         Analyze the following market data and provide a trading recommendation:
-        
+
         Market Features:
         - Current Price: {features.get("price", "N/A")}
         - EMA: {features.get("ema", "N/A")}
@@ -182,7 +182,7 @@ class SignalAdvisor:
         - ATR: {features.get("atr", "N/A")}
         - ADX: {features.get("adx", "N/A")}
         - Volume Trend: {features.get("volume_trend", "N/A")}
-        
+
         Please return a JSON response with the following structure:
         {{
             "score": <float between 0.0 and 1.0>,
@@ -190,7 +190,7 @@ class SignalAdvisor:
             "strategy": "<trading strategy name>",
             "action": "<BUY, SELL, or HOLD>"
         }}
-        
+
         Guidelines:
         - Score should reflect confidence in the trading signal (0.0 = very bearish, 1.0 = very bullish)
         - Rationale should be concise but informative

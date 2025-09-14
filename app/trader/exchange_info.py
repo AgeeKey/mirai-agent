@@ -63,9 +63,7 @@ class ExchangeInfo:
 
         # Use strict rounding to nearest tick to avoid precision errors
         # Round to nearest tick, then ensure it's properly formatted
-        adjusted_price = (price_decimal / tick_size).quantize(
-            Decimal("1"), rounding=ROUND_DOWN
-        ) * tick_size
+        adjusted_price = (price_decimal / tick_size).quantize(Decimal("1"), rounding=ROUND_DOWN) * tick_size
 
         result = float(adjusted_price)
 
@@ -99,9 +97,7 @@ class ExchangeInfo:
 
         # Use strict rounding to nearest step to avoid precision errors
         # Round down to nearest step
-        adjusted_qty = (qty_decimal / step_size).quantize(
-            Decimal("1"), rounding=ROUND_DOWN
-        ) * step_size
+        adjusted_qty = (qty_decimal / step_size).quantize(Decimal("1"), rounding=ROUND_DOWN) * step_size
 
         # Ensure we don't go below minimum after rounding
         if adjusted_qty < min_qty:
@@ -110,9 +106,7 @@ class ExchangeInfo:
         result = float(adjusted_qty)
 
         if result != quantity:
-            logger.info(
-                f"Quantity adjusted for {symbol}: {quantity} -> {result} (stepSize: {step_size})"
-            )
+            logger.info(f"Quantity adjusted for {symbol}: {quantity} -> {result} (stepSize: {step_size})")
 
         return result
 
@@ -131,9 +125,7 @@ class ExchangeInfo:
 
         return True
 
-    def validate_order_params(
-        self, symbol: str, quantity: float, price: float | None = None
-    ) -> dict[str, Any]:
+    def validate_order_params(self, symbol: str, quantity: float, price: float | None = None) -> dict[str, Any]:
         """
         Validate and adjust all order parameters according to exchange filters
         """

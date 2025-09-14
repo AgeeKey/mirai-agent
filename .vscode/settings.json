@@ -1,5 +1,6 @@
 {
   "chat.agent.maxRequests": 10000,
+  "chatgpt.openOnStartup": true,
   "github.copilot.enable": {
     "*": true,
     "yaml": true,

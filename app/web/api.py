@@ -4,11 +4,9 @@ FastAPI Web API for Mirai Agent
 
 import logging
 import os
-
-# Adjust imports for the web module context
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -16,12 +14,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+# Adjust imports for the web module context
 app_root = Path(__file__).parent.parent
 sys.path.insert(0, str(app_root))
 
 from trader.binance_client import BinanceClient
 from trader.orders import OrderManager
 
+from .ui import ui_router
 from .utils import get_agent_state, get_safe_status_data, verify_credentials
 
 logger = logging.getLogger(__name__)
@@ -39,8 +39,6 @@ app.add_middleware(
 )
 
 # Include UI router
-from .ui import ui_router
-
 app.include_router(ui_router)
 
 
@@ -87,13 +85,13 @@ async def kill_switch(request: KillRequest, authorized: bool = Depends(verify_cr
             "message": f"Kill switch executed for {symbol}",
             "orders_cancelled": True,
             "position_closed": True,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
     except Exception as e:
         agent_state["errors_count"] += 1
         logger.error(f"Kill switch error: {e}")
-        raise HTTPException(status_code=500, detail={"error": "Kill switch failed", "reason": str(e)})
+        raise HTTPException(status_code=500, detail={"error": "Kill switch failed", "reason": str(e)}) from e
 
 
 @app.get("/metrics")
@@ -136,7 +134,7 @@ async def change_mode(request: ModeRequest, authorized: bool = Depends(verify_cr
         "success": True,
         "old_mode": old_mode,
         "new_mode": request.mode,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
@@ -149,7 +147,7 @@ async def pause_agent(authorized: bool = Depends(verify_credentials)):
 
     logger.info("Agent paused via web interface")
 
-    return {"success": True, "paused": True, "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {"success": True, "paused": True, "timestamp": datetime.now(UTC).isoformat()}
 
 
 @app.post("/resume")
@@ -161,7 +159,7 @@ async def resume_agent(authorized: bool = Depends(verify_credentials)):
 
     logger.info("Agent resumed via web interface")
 
-    return {"success": True, "paused": False, "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {"success": True, "paused": False, "timestamp": datetime.now(UTC).isoformat()}
 
 
 @app.exception_handler(Exception)
@@ -178,4 +176,4 @@ if __name__ == "__main__":
     import uvicorn
 
     port = int(os.getenv("WEB_PORT", 8000))
-    uvicorn.run(app, host="127.0.0.1", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=port)
