@@ -278,3 +278,54 @@ sqlite3 /opt/mirai/state/mirai.db "SELECT * FROM agent_actions ORDER BY timestam
 4. **Maintain** → Weekly cleanup → Backup data
 
 Эта система гарантирует **стабильную работу CI/CD** без сюрпризов! 🔒
+
+---
+
+## 🤖 Bootstrap AI access
+
+Этот шаг даёт Codex (Codespaces/Actions) полный доступ к GitHub, GHCR, серверу и интеграциям.
+
+### 🔑 Secrets
+
+Задай в Repo → Settings → Secrets and variables (и в Codespaces, и в Actions):
+
+Обязательные
+
+- `GH_TOKEN` (scopes: `repo`, `workflow`, `write:packages`)
+- `SSH_HOST` (IP/домен сервера)
+- `SSH_USER` (имя пользователя, напр. root или deploy)
+- `SSH_KEY` (многострочный приватный ключ) ИЛИ `SSH_KEY_B64` (тот же ключ в base64)
+
+Опциональные
+
+- `GHCR_USERNAME`, `GHCR_TOKEN` (иначе используются `GH_TOKEN` и твой GitHub login)
+- `BINANCE_API_KEY`, `BINANCE_API_SECRET`
+- `DOMAIN_PANEL`, `DOMAIN_STUDIO`
+- `ENVIRONMENT` (например `production`)
+- `JWT_SECRET`
+- `WEB_USER`, `WEB_PASS`
+- `OPENAI_API_KEY`
+- `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID_ADMIN`
+
+Пример: `scripts/.env.ai.example`
+
+### 🚀 Запуск
+
+В Codespace:
+
+```bash
+bash scripts/bootstrap-ai-access.sh
+```
+
+### ✅ Проверки
+
+- `gh auth status` → GitHub доступ активен
+- `docker login ghcr.io` → логин успешен (скрипт логинит автоматически)
+- `ssh mirai-deploy echo ok` → сервер доступен
+
+### 📦 Что дальше
+
+- пуш веток/тегов, PR/релизы, запуск workflows;
+- сборка и push образов в GHCR;
+- деплой и перезапуск сервисов на сервере;
+- интеграции (Binance, Telegram, OpenAI и др.).
