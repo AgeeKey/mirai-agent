@@ -22,16 +22,6 @@
   "github.copilot.editor.enableCodeActions": true,
   "github.copilot.chat.localeOverride": "ru",
   "github.copilot.chat.welcomeMessage": "never",
-  "github.copilot.chat.experimental.codeGeneration.instructions": [
-    "Always write production-ready code",
-    "Follow Python PEP 8 and best practices", 
-    "Use type hints in Python",
-    "Write comprehensive docstrings",
-    "Handle errors gracefully",
-    "Use async/await where appropriate",
-    "Follow FastAPI conventions for API endpoints",
-    "Use Pydantic models for data validation"
-  ],
   "workbench.editorAssociations": {
     "*.md": "vscode.markdown.preview.editor"
   },
@@ -55,5 +45,15 @@
   "python.testing.autoTestDiscoverOnSaveEnabled": true,
   "security.workspace.trust.enabled": false,
   "extensions.ignoreRecommendations": false,
-  "workbench.startupEditor": "none"
+  "workbench.startupEditor": "none",
+  "github.copilot.chat.codeGeneration.instructions": [
+    "Always write production-ready code",
+    "Follow Python PEP 8 and best practices",
+    "Use type hints in Python",
+    "Write comprehensive docstrings",
+    "Handle errors gracefully",
+    "Use async/await where appropriate",
+    "Follow FastAPI conventions for API endpoints",
+    "Use Pydantic models for data validation"
+  ]
 }
