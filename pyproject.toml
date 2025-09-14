@@ -31,7 +31,7 @@ python_functions = ["test_*"]
 addopts = "-v --tb=short"
 filterwarnings = [
     "ignore::DeprecationWarning",
-    "ignore::PydanticDeprecatedSince20"
+    "ignore::pydantic.warnings.PydanticDeprecatedSince20"
 ]
 asyncio_mode = "auto"
 pythonpath = [".", "app/api", "app/trader", "app/telegram_bot"]
