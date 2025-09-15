@@ -1,0 +1,23 @@
+# Security policy configurations for CodeQL
+name: "CodeQL Security Configuration"
+
+disable-default-queries: false
+
+queries:
+  - name: security-extended
+    uses: security-extended
+  - name: security-and-quality
+    uses: security-and-quality
+
+paths-ignore:
+  - "tests/**"
+  - "docs/**"
+  - "**/*.md"
+  - "**/node_modules/**"
+  - "**/__pycache__/**"
+  - "**/.pytest_cache/**"
+
+paths:
+  - "app/**"
+  - "web/**"
+  - ".github/**"

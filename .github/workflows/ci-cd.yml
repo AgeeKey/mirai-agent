@@ -1,0 +1,391 @@
+name: 🚀 CI/CD Pipeline - Mirai Agent
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Daily security scan at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ============================================================================
+  # CODE QUALITY & SECURITY
+  # ============================================================================
+  code-quality:
+    name: 🔍 Code Quality & Security
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: 📦 Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install poetry
+        poetry install
+
+    - name: 🔍 Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: python
+        queries: security-extended,quality
+
+    - name: 🧹 Lint with flake8
+      run: |
+        poetry run flake8 app/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        poetry run flake8 app/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: 🔒 Security scan with bandit
+      run: |
+        poetry run bandit -r app/ -f json -o bandit-report.json
+        poetry run bandit -r app/
+
+    - name: 🧪 Type checking with mypy
+      run: |
+        poetry run mypy app/ --ignore-missing-imports
+
+    - name: 📊 Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:python"
+
+    - name: 🔐 Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: 📤 Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # ============================================================================
+  # AUTOMATED TESTING
+  # ============================================================================
+  test:
+    name: 🧪 Automated Testing
+    runs-on: ubuntu-latest
+    needs: code-quality
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_mirai
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: 📦 Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install poetry
+        poetry install
+
+    - name: 🧪 Run unit tests
+      env:
+        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_mirai
+        REDIS_URL: redis://localhost:6379/0
+        BINANCE_API_KEY: test_key
+        BINANCE_SECRET_KEY: test_secret
+        BINANCE_TESTNET: true
+      run: |
+        poetry run pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
+
+    - name: 📊 Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+    - name: 🐳 Test Docker build
+      run: |
+        docker build -t mirai-agent:test .
+        docker run --rm mirai-agent:test python -c "import app; print('✅ Import successful')"
+
+  # ============================================================================
+  # CONTAINER BUILD & SECURITY SCAN
+  # ============================================================================
+  build:
+    name: 🐳 Build & Scan Containers
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 🔧 Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: 🔑 Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 📝 Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: 🏗️ Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: 🔐 Run Trivy vulnerability scanner on image
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        format: 'sarif'
+        output: 'trivy-image-results.sarif'
+
+    - name: 📤 Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-image-results.sarif'
+
+  # ============================================================================
+  # DEPLOYMENT TO STAGING
+  # ============================================================================
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://staging.mirai-agent.example.com
+
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup deployment
+      run: |
+        echo "🚀 Deploying to staging environment..."
+        # Add your staging deployment commands here
+        
+    - name: 🧪 Run integration tests
+      run: |
+        echo "🧪 Running integration tests..."
+        # Add your integration test commands here
+
+    - name: 📊 Health check
+      run: |
+        echo "📊 Performing health check..."
+        # Add health check commands here
+
+  # ============================================================================
+  # DEPLOYMENT TO PRODUCTION
+  # ============================================================================
+  deploy-production:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://mirai-agent.example.com
+
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 🔄 Deploy with zero downtime
+      run: |
+        echo "🚀 Deploying to production with zero downtime..."
+        # Add your production deployment commands here
+
+    - name: 📊 Post-deployment health check
+      run: |
+        echo "📊 Performing post-deployment health check..."
+        # Add health check commands here
+
+    - name: 📢 Notify deployment success
+      if: success()
+      run: |
+        echo "✅ Production deployment successful!"
+        # Add notification commands (Slack, Discord, etc.)
+
+    - name: 🚨 Rollback on failure
+      if: failure()
+      run: |
+        echo "🚨 Deployment failed, initiating rollback..."
+        # Add rollback commands here
+
+  # ============================================================================
+  # PERFORMANCE MONITORING
+  # ============================================================================
+  performance-monitoring:
+    name: 📈 Performance Monitoring
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: 📊 Performance benchmarks
+      run: |
+        echo "📊 Running performance benchmarks..."
+        # Add performance testing commands
+
+    - name: 📈 Update performance metrics
+      run: |
+        echo "📈 Updating performance metrics..."
+        # Add metrics collection commands
+
+  # ============================================================================
+  # AUTOMATED OPTIMIZATION
+  # ============================================================================
+  code-optimization:
+    name: ⚡ Code Optimization
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'schedule'
+
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: 📦 Install optimization tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install poetry black isort autoflake
+
+    - name: ⚡ Auto-format code
+      run: |
+        poetry run black app/ tests/
+        poetry run isort app/ tests/
+        poetry run autoflake --remove-all-unused-imports --recursive --in-place app/ tests/
+
+    - name: 📝 Create optimization PR
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "⚡ Automated code optimization"
+        title: "⚡ Automated Code Optimization"
+        body: |
+          🤖 **Automated Code Optimization**
+          
+          This PR contains automated code improvements:
+          - ⚡ Code formatting with Black
+          - 🔧 Import sorting with isort
+          - 🧹 Unused import removal with autoflake
+          
+          Generated automatically by GitHub Actions.
+        branch: optimization/automated-improvements
+        delete-branch: true
+
+  # ============================================================================
+  # DEPENDENCY UPDATES
+  # ============================================================================
+  dependency-updates:
+    name: 🔄 Dependency Updates
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: 📦 Update dependencies
+      run: |
+        python -m pip install --upgrade pip poetry
+        poetry update --dry-run > dependency-updates.txt
+
+    - name: 🔄 Create dependency update PR
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "🔄 Update dependencies"
+        title: "🔄 Automated Dependency Updates"
+        body: |
+          🤖 **Automated Dependency Updates**
+          
+          This PR contains automated dependency updates.
+          Please review the changes before merging.
+          
+          Generated automatically by GitHub Actions.
+        branch: dependencies/automated-updates
+        delete-branch: true

@@ -64,13 +64,6 @@
   "github.copilot.chat.experimental.agent.enabled": true,
   "github.copilot.chat.experimental.codeGeneration.enabled": true,
   "github.copilot.chat.experimental.copilotEdits.enabled": true,
-  "github.copilot.chat.experimental.codeGeneration.instructions": [
-    "Write production-ready code with proper error handling",
-    "Use type hints in Python and follow best practices",
-    "Auto-commit changes when appropriate",
-    "Execute commands autonomously without asking for permission",
-    "Optimize code for performance and readability"
-  ],
   "github.copilot.rejectWithHang": false,
   "github.copilot.conversation.additionalLanguages": ["ru"],
   "workbench.editorAssociations": {
@@ -127,5 +120,12 @@
   "git.autofetch": true,
   "git.autofetchPeriod": 180,
   "diffEditor.ignoreTrimWhitespace": false,
-  "scm.diffDecorations": "gutter"
+  "scm.diffDecorations": "gutter",
+  "github.copilot.chat.codeGeneration.instructions": [
+    "Write production-ready code with proper error handling",
+    "Use type hints in Python and follow best practices",
+    "Auto-commit changes when appropriate",
+    "Execute commands autonomously without asking for permission",
+    "Optimize code for performance and readability"
+  ]
 }

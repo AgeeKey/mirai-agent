@@ -1,0 +1,125 @@
+name: 🔄 Dependabot Configuration
+
+version: 2
+
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    assignees:
+      - "mirai-maintainer"
+    reviewers:
+      - "security-team"
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "⬆️"
+      include: "scope"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    assignees:
+      - "mirai-maintainer"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "🐳"
+      include: "scope"
+
+  # API Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/app/api"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "10:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "docker"
+      - "api"
+
+  # Trader Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/app/trader"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "11:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "docker"
+      - "trader"
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    assignees:
+      - "mirai-maintainer"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "🔧"
+      include: "scope"
+
+  # Web dashboard dependencies (Node.js)
+  - package-ecosystem: "npm"
+    directory: "/web/services"
+    schedule:
+      interval: "weekly"
+      day: "thursday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    assignees:
+      - "mirai-maintainer"
+    reviewers:
+      - "frontend-team"
+    labels:
+      - "dependencies"
+      - "javascript"
+      - "dashboard"
+    commit-message:
+      prefix: "📦"
+      include: "scope"
+    ignore:
+      # Ignore major version updates for critical packages
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+
+# Advanced configuration for security updates
+  # Enable security updates for all ecosystems
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 5
+    labels:
+      - "security"
+      - "critical"
+    allow:
+      - dependency-type: "direct"
+        update-type: "security"
+      - dependency-type: "indirect" 
+        update-type: "security"
