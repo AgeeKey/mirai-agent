@@ -8,7 +8,10 @@ echo ""
 
 # Test 1: Environment Variables
 echo "1. 🌍 Проверка переменных окружения:"
-source /home/runner/work/mirai-agent/mirai-agent/scripts/activate_autonomous_env.sh >/dev/null 2>&1
+# Use environment variable if set, otherwise use relative path from this script's location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ACTIVATE_AUTONOMOUS_ENV_PATH="${ACTIVATE_AUTONOMOUS_ENV_PATH:-$SCRIPT_DIR/activate_autonomous_env.sh}"
+source "$ACTIVATE_AUTONOMOUS_ENV_PATH" >/dev/null 2>&1
 
 echo "   MIRAI_AUTONOMOUS_MODE: ${MIRAI_AUTONOMOUS_MODE:-❌ НЕ УСТАНОВЛЕНА}"
 echo "   GITHUB_COPILOT_AUTONOMOUS: ${GITHUB_COPILOT_AUTONOMOUS:-❌ НЕ УСТАНОВЛЕНА}"
