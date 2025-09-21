@@ -1,0 +1,20 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip install fastapi==0.104.1 uvicorn[standard]==0.24.0 httpx==0.25.2
+
+# Copy web panel
+COPY web_panel_production.py /app/
+
+# Expose port
+EXPOSE 8000
+
+# Run the web panel
+CMD ["uvicorn", "web_panel_production:app", "--host", "0.0.0.0", "--port", "8000"]

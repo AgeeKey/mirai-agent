@@ -1,0 +1,158 @@
+version: '3.8'
+
+networks:
+  mirai-network:
+    driver: bridge
+
+services:
+  # Infrastructure services
+  redis:
+    image: redis:7-alpine
+    container_name: mirai-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    networks:
+      - mirai-network
+    restart: unless-stopped
+
+  # Web Panel (main interface)
+  web-panel:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: mirai-web-panel
+    ports:
+      - "8080:8000"
+      - "8888:8000"
+    environment:
+      - ENVIRONMENT=production
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    depends_on:
+      - redis
+    networks:
+      - mirai-network
+    restart: unless-stopped
+
+  # Microservices
+  data-collector:
+    build:
+      context: ./microservices
+      dockerfile: Dockerfile
+    container_name: mirai-data-collector
+    command: ["uvicorn", "data_collector:app", "--host", "0.0.0.0", "--port", "8001"]
+    ports:
+      - "8001:8001"
+    environment:
+      - ENVIRONMENT=production
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    depends_on:
+      - redis
+    networks:
+      - mirai-network
+    restart: unless-stopped
+
+  strategy-engine:
+    build:
+      context: ./microservices
+      dockerfile: Dockerfile
+    container_name: mirai-strategy-engine
+    command: ["uvicorn", "strategy_engine:app", "--host", "0.0.0.0", "--port", "8002"]
+    ports:
+      - "8002:8002"
+    environment:
+      - ENVIRONMENT=production
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    depends_on:
+      - redis
+      - data-collector
+    networks:
+      - mirai-network
+    restart: unless-stopped
+
+  risk-engine:
+    build:
+      context: ./microservices
+      dockerfile: Dockerfile
+    container_name: mirai-risk-engine
+    command: ["uvicorn", "risk_engine:app", "--host", "0.0.0.0", "--port", "8003"]
+    ports:
+      - "8003:8003"
+    environment:
+      - ENVIRONMENT=production
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    depends_on:
+      - redis
+    networks:
+      - mirai-network
+    restart: unless-stopped
+
+  analytics:
+    build:
+      context: ./microservices
+      dockerfile: Dockerfile
+    container_name: mirai-analytics
+    command: ["uvicorn", "analytics:app", "--host", "0.0.0.0", "--port", "8004"]
+    ports:
+      - "8004:8004"
+    environment:
+      - ENVIRONMENT=production
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    depends_on:
+      - redis
+    networks:
+      - mirai-network
+    restart: unless-stopped
+
+  notifications:
+    build:
+      context: ./microservices
+      dockerfile: Dockerfile
+    container_name: mirai-notifications
+    command: ["uvicorn", "notifications:app", "--host", "0.0.0.0", "--port", "8005"]
+    ports:
+      - "8005:8005"
+    environment:
+      - ENVIRONMENT=production
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    depends_on:
+      - redis
+    networks:
+      - mirai-network
+    restart: unless-stopped
+
+  portfolio-manager:
+    build:
+      context: ./microservices
+      dockerfile: Dockerfile
+    container_name: mirai-portfolio-manager
+    command: ["uvicorn", "portfolio_manager:app", "--host", "0.0.0.0", "--port", "8006"]
+    ports:
+      - "8006:8006"
+    environment:
+      - ENVIRONMENT=production
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    depends_on:
+      - redis
+    networks:
+      - mirai-network
+    restart: unless-stopped
+
+  ai-engine:
+    build:
+      context: ./microservices
+      dockerfile: Dockerfile
+    container_name: mirai-ai-engine
+    command: ["uvicorn", "ai_engine:app", "--host", "0.0.0.0", "--port", "8007"]
+    ports:
+      - "8007:8007"
+    environment:
+      - ENVIRONMENT=production
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    depends_on:
+      - redis
+    networks:
+      - mirai-network
+    restart: unless-stopped
