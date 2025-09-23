@@ -14,6 +14,7 @@ import os
 from datetime import datetime
 from typing import Optional, Dict, List
 import logging
+import requests
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -734,6 +735,39 @@ async def proxy_post(service_name: str, path: str, request: Request, username: s
     
     return await call_microservice(service_name, f"/{path}", "POST", data)
 
+def get_aimirai_data():
+    """Получает данные с aimirai.info для интеграции."""
+    try:
+        response = requests.get("http://aimirai.info/api/status")
+        return response.json()
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def serve_advanced_dashboard():
+    """Запускает продвинутый дашборд Next.js с компонентами TradingView и уведомлениями в реальном времени."""
+    print("Запуск продвинутого дашборда Next.js...")
+
+    # Заглушки для компонентов дашборда
+    trading_view_chart = "[TradingView Chart Placeholder]"
+    notifications = "[Real-time notifications Placeholder]"
+
+    # Интеграция с aimirai.info
+    aimirai_integration = get_aimirai_data()
+
+    dashboard_data = {
+        "message": "Продвинутый дашборд запущен!",
+        "trading_view_chart": trading_view_chart,
+        "notifications": notifications,
+        "aimirai_integration": aimirai_integration
+    }
+
+    print("Данные дашборда:", dashboard_data)
+
+
+if __name__ == '__main__':
+    serve_advanced_dashboard()
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)

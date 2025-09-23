@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: mirai_production
+      POSTGRES_USER: mirai
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mirai_secure_pass_2024}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mirai -d mirai_production"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_secure_pass_2024}
+    volumes:
+      - ./data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Trading Platform (aimirai.online)
+  mirai-trading:
+    image: mirai-agent:latest
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql://mirai:${POSTGRES_PASSWORD:-mirai_secure_pass_2024}@postgres:5432/mirai_production
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_secure_pass_2024}@redis:6379
+      - DOMAIN=aimirai.online
+      - SERVICE_TYPE=trading
+      - DRY_RUN=false
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+      - ./data/sqlite:/app/state
+    restart: unless-stopped
+    command: ["uvicorn", "app.api.mirai_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  # Services Platform (aimirai.info)  
+  mirai-services:
+    image: mirai-agent:latest
+    ports:
+      - "8002:8000"
+    environment:
+      - DATABASE_URL=postgresql://mirai:${POSTGRES_PASSWORD:-mirai_secure_pass_2024}@postgres:5432/mirai_production
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_secure_pass_2024}@redis:6379
+      - DOMAIN=aimirai.info
+      - SERVICE_TYPE=services
+      - DRY_RUN=false
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+      - ./data/sqlite:/app/state
+    restart: unless-stopped
+    command: ["uvicorn", "app.api.mirai_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  # Simple Nginx Proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-fast.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - mirai-trading
+      - mirai-services
+    restart: unless-stopped
+
+networks:
+  default:
+    name: mirai-fast-network

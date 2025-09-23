@@ -1,0 +1,138 @@
+{
+  "test_start_time": "2025-09-22T11:52:43.782737",
+  "tests": [
+    {
+      "test_name": "Decision Making Performance",
+      "total_tests": 5,
+      "successful_decisions": 5,
+      "success_rate_percent": 100.0,
+      "avg_decision_time_ms": 0.08211135864257812,
+      "max_decision_time_ms": 0.18525123596191406,
+      "min_decision_time_ms": 0.043392181396484375,
+      "performance_rating": "excellent",
+      "success": true
+    },
+    {
+      "test_name": "Knowledge Base Performance",
+      "total_entries_in_db": 0,
+      "test_additions": 20,
+      "successful_additions": 20,
+      "add_success_rate_percent": 100.0,
+      "avg_add_time_ms": 0.09942054748535156,
+      "test_searches": 5,
+      "successful_searches": 5,
+      "search_success_rate_percent": 100.0,
+      "avg_search_time_ms": 0.01220703125,
+      "performance_rating": "excellent",
+      "success": true
+    }
+  ],
+  "system_metrics": [
+    {
+      "timestamp": "2025-09-22T11:52:43.793116",
+      "cpu_percent": 12.2,
+      "memory_percent": 48.9,
+      "memory_used": 4068192256,
+      "memory_total": 8327426048,
+      "disk_usage": 6.9,
+      "processes": 179,
+      "load_average": [
+        0.279296875,
+        0.24609375,
+        0.19140625
+      ]
+    },
+    {
+      "timestamp": "2025-09-22T11:52:44.800012",
+      "cpu_percent": 53.0,
+      "memory_percent": 49.2,
+      "memory_used": 4094390272,
+      "memory_total": 8327426048,
+      "disk_usage": 6.9,
+      "processes": 234,
+      "load_average": [
+        0.33740234375,
+        0.2587890625,
+        0.19580078125
+      ]
+    },
+    {
+      "timestamp": "2025-09-22T11:52:45.805242",
+      "cpu_percent": 31.7,
+      "memory_percent": 49.5,
+      "memory_used": 4125106176,
+      "memory_total": 8327426048,
+      "disk_usage": 6.9,
+      "processes": 184,
+      "load_average": [
+        0.33740234375,
+        0.2587890625,
+        0.19580078125
+      ]
+    },
+    {
+      "timestamp": "2025-09-22T11:52:46.826005",
+      "cpu_percent": 4.7,
+      "memory_percent": 49.5,
+      "memory_used": 4118200320,
+      "memory_total": 8327426048,
+      "disk_usage": 6.9,
+      "processes": 176,
+      "load_average": [
+        0.33740234375,
+        0.2587890625,
+        0.19580078125
+      ]
+    },
+    {
+      "timestamp": "2025-09-22T11:52:50.041079",
+      "cpu_percent": 7.0,
+      "memory_percent": 50.0,
+      "memory_used": 4167786496,
+      "memory_total": 8327426048,
+      "disk_usage": 6.9,
+      "processes": 188,
+      "load_average": [
+        0.31005859375,
+        0.25439453125,
+        0.1943359375
+      ]
+    }
+  ],
+  "ml_performance": {
+    "test_name": "ML Algorithm Performance",
+    "tested_symbols": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "ADAUSDT"
+    ],
+    "symbol_results": {
+      "BTCUSDT": {
+        "symbol": "BTCUSDT",
+        "test_count": 5,
+        "successful_predictions": 5,
+        "success_rate_percent": 100.0,
+        "avg_prediction_time_ms": 1.285409927368164,
+        "performance_rating": "excellent"
+      },
+      "ETHUSDT": {
+        "symbol": "ETHUSDT",
+        "test_count": 5,
+        "successful_predictions": 5,
+        "success_rate_percent": 100.0,
+        "avg_prediction_time_ms": 0.7932186126708984,
+        "performance_rating": "excellent"
+      },
+      "ADAUSDT": {
+        "symbol": "ADAUSDT",
+        "test_count": 5,
+        "successful_predictions": 5,
+        "success_rate_percent": 100.0,
+        "avg_prediction_time_ms": 0.8149147033691406,
+        "performance_rating": "excellent"
+      }
+    },
+    "overall_success_rate_percent": 100.0,
+    "overall_avg_prediction_time_ms": 0.964514414469401,
+    "performance_rating": "excellent",
+    "success": 

@@ -1,0 +1,5 @@
+fastmcp
+openai
+uvicorn[standard]
+httpx
+python-dotenv

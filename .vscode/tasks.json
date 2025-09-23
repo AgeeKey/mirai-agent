@@ -1,0 +1,39 @@
+{
+  // VS Code Tasks for autonomy test
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Autonomy: Echo TASK_OK",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-lc", "echo TASK_OK"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run API (FastAPI)",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-lc", "cd app/api && uvicorn mirai_api.main:app --host 0.0.0.0 --port 8000"],
+      "isBackground": true,
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Run Web (Next.js)",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-lc", "cd web/services && npm run dev"],
+      "isBackground": true,
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Run Full Stack",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-lc", "echo Starting API and Web..."],
+      "dependsOn": ["Run API (FastAPI)", "Run Web (Next.js)"]
+    }
+  ]
+}

@@ -1,0 +1,448 @@
+/* 🌟 Mirai Agent - Anime Theme System */
+
+:root {
+  /* === ОСНОВНАЯ ЦВЕТОВАЯ ПАЛИТРА === */
+  --mirai-dark: #0B1622;           /* Глубокий темно-синий фон */
+  --mirai-primary: #00E2FF;        /* Кибер-голубой (основной акцент) */
+  --mirai-secondary: #A076F9;      /* Мягкий фиолетовый */
+  --mirai-accent: #FF6BC1;         /* Контрастный розовый */
+  --mirai-success: #36EABE;        /* Мятно-зеленый */
+  --mirai-warning: #FFB800;        /* Золотисто-желтый */
+  --mirai-error: #FF3A76;          /* Неоново-красный */
+  --mirai-panel: #133D5A;          /* Приглушенный голубой */
+  --mirai-glass: rgba(255, 255, 255, 0.1); /* Стеклянный эффект */
+  
+  /* === ГРАДИЕНТЫ === */
+  --gradient-primary: linear-gradient(135deg, #00E2FF 0%, #A076F9 100%);
+  --gradient-secondary: linear-gradient(135deg, #A076F9 0%, #FF6BC1 100%);
+  --gradient-holographic: linear-gradient(45deg, #00D9FF, #FFB7C5, #8B5CF6);
+  --gradient-success: linear-gradient(135deg, #36EABE 0%, #00E2FF 100%);
+  --gradient-danger: linear-gradient(135deg, #FF3A76 0%, #FF6BC1 100%);
+  --gradient-bg: linear-gradient(135deg, #0B1622 0%, #1a2332 50%, #2a1b3d 100%);
+  
+  /* === ТЕНИ И СВЕЧЕНИЕ === */
+  --shadow-neon-primary: 0 0 20px rgba(0, 226, 255, 0.5);
+  --shadow-neon-secondary: 0 0 20px rgba(160, 118, 249, 0.5);
+  --shadow-neon-accent: 0 0 20px rgba(255, 107, 193, 0.5);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.37);
+  --shadow-deep: 0 20px 40px rgba(0, 0, 0, 0.8);
+  
+  /* === ТИПОГРАФИКА === */
+  --font-primary: 'Inter', 'Exo 2', sans-serif;
+  --font-accent: 'JetBrains Mono', monospace;
+  --font-japanese: 'Noto Sans JP', sans-serif;
+  
+  /* === РАДИУСЫ И РАЗМЕРЫ === */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+  
+  /* === Z-INDEX СЛОИ === */
+  --z-background: -1;
+  --z-base: 0;
+  --z-panel: 10;
+  --z-overlay: 20;
+  --z-modal: 30;
+  --z-tooltip: 40;
+  --z-notification: 50;
+}
+
+/* === БАЗОВЫЕ СТИЛИ === */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-primary);
+  background: var(--gradient-bg);
+  color: #ffffff;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* === НЕОНОВЫЕ ЭФФЕКТЫ === */
+.neon-glow-primary {
+  text-shadow: 
+    0 0 10px var(--mirai-primary),
+    0 0 20px var(--mirai-primary),
+    0 0 30px var(--mirai-primary);
+}
+
+.neon-glow-secondary {
+  text-shadow: 
+    0 0 10px var(--mirai-secondary),
+    0 0 20px var(--mirai-secondary),
+    0 0 30px var(--mirai-secondary);
+}
+
+.neon-glow-accent {
+  text-shadow: 
+    0 0 10px var(--mirai-accent),
+    0 0 20px var(--mirai-accent),
+    0 0 30px var(--mirai-accent);
+}
+
+/* === ГОЛОГРАФИЧЕСКИЕ ЭФФЕКТЫ === */
+.holographic {
+  background: var(--gradient-holographic);
+  background-size: 200% 200%;
+  animation: holographic-shift 3s ease infinite;
+  filter: drop-shadow(var(--shadow-neon-primary));
+}
+
+@keyframes holographic-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* === СТЕКЛЯННЫЙ ЭФФЕКТ === */
+.glass-panel {
+  background: var(--mirai-glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-glass);
+}
+
+.glass-panel-strong {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-glass);
+}
+
+/* === АНИМАЦИИ ЧАСТИЦ === */
+.particle-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: var(--z-background);
+  overflow: hidden;
+}
+
+.sakura-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--mirai-accent);
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: sakura-fall linear infinite;
+}
+
+@keyframes sakura-fall {
+  0% { 
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% { opacity: 0.7; }
+  90% { opacity: 0.7; }
+  100% { 
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* === КИБЕР-ЭЛЕМЕНТЫ === */
+.cyber-border {
+  position: relative;
+  border: 2px solid transparent;
+  background: linear-gradient(var(--mirai-dark), var(--mirai-dark)) padding-box,
+              var(--gradient-primary) border-box;
+}
+
+.cyber-border::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: var(--gradient-primary);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0.3;
+  filter: blur(4px);
+}
+
+/* === ПУЛЬСИРУЮЩИЕ ЭФФЕКТЫ === */
+.pulse-primary {
+  animation: pulse-primary 2s ease-in-out infinite;
+}
+
+@keyframes pulse-primary {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(0, 226, 255, 0.7);
+  }
+  50% { 
+    box-shadow: 0 0 0 20px rgba(0, 226, 255, 0);
+  }
+}
+
+.pulse-danger {
+  animation: pulse-danger 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-danger {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(255, 58, 118, 0.7);
+  }
+  50% { 
+    box-shadow: 0 0 0 15px rgba(255, 58, 118, 0);
+  }
+}
+
+/* === ТЕКСТОВЫЕ ЭФФЕКТЫ === */
+.text-gradient-primary {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-secondary {
+  background: var(--gradient-secondary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* === ЭФФЕКТ ПЕЧАТИ === */
+.typing-effect {
+  overflow: hidden;
+  border-right: 2px solid var(--mirai-primary);
+  white-space: nowrap;
+  animation: typing 3s steps(40) 1s 1 normal both,
+             blink-cursor 1s steps(2) infinite;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink-cursor {
+  from, to { border-color: transparent; }
+  50% { border-color: var(--mirai-primary); }
+}
+
+/* === КНОПКИ С ЭФФЕКТАМИ === */
+.btn-mirai {
+  position: relative;
+  padding: 12px 24px;
+  background: var(--gradient-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-mirai:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-neon-primary);
+}
+
+.btn-mirai:active {
+  transform: translateY(0);
+}
+
+.btn-mirai::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-mirai:hover::before {
+  left: 100%;
+}
+
+/* === ИНДИКАТОРЫ СОСТОЯНИЯ === */
+.status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.status-online {
+  background: var(--mirai-success);
+  box-shadow: 0 0 10px var(--mirai-success);
+  animation: pulse-success 2s ease-in-out infinite;
+}
+
+.status-warning {
+  background: var(--mirai-warning);
+  box-shadow: 0 0 10px var(--mirai-warning);
+}
+
+.status-error {
+  background: var(--mirai-error);
+  box-shadow: 0 0 10px var(--mirai-error);
+  animation: pulse-danger 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-success {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(54, 234, 190, 0.7);
+  }
+  50% { 
+    box-shadow: 0 0 0 10px rgba(54, 234, 190, 0);
+  }
+}
+
+/* === КАРТОЧКИ === */
+.mirai-card {
+  background: var(--mirai-glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.mirai-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--mirai-primary);
+  box-shadow: var(--shadow-neon-primary);
+}
+
+.mirai-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gradient-primary);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.mirai-card:hover::before {
+  opacity: 1;
+}
+
+/* === СКРОЛЛБАРЫ === */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gradient-primary);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gradient-secondary);
+}
+
+/* === УТИЛИТЫ === */
+.text-shadow-soft {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.backdrop-blur-strong {
+  backdrop-filter: blur(20px);
+}
+
+.border-glow-primary {
+  border: 1px solid var(--mirai-primary);
+  box-shadow: 0 0 10px rgba(0, 226, 255, 0.3);
+}
+
+.bg-mirai-dark {
+  background-color: var(--mirai-dark);
+}
+
+.bg-mirai-panel {
+  background-color: var(--mirai-panel);
+}
+
+/* === ОТЗЫВЧИВОСТЬ === */
+@media (max-width: 768px) {
+  .mirai-card {
+    padding: 16px;
+  }
+  
+  .btn-mirai {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+/* === ACCESSIBILITY === */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* === СПЕЦИАЛЬНЫЕ ЭФФЕКТЫ ДЛЯ ИГРОВОГО ИНТЕРФЕЙСА === */
+.hp-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.hp-bar-fill {
+  height: 100%;
+  background: var(--gradient-success);
+  transition: width 0.5s ease;
+  border-radius: var(--radius-full);
+}
+
+.hp-bar-fill.low {
+  background: var(--gradient-danger);
+  animation: pulse-danger 1s ease-in-out infinite;
+}
+
+.mp-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.mp-bar-fill {
+  height: 100%;
+  background: var(--gradient-primary);
+  transition: width 0.5s ease;
+  border-radius: var(--radius-full);
+}

@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+
+{% block title %}О проекте - Mirai (誉明){% endblock %}
+
+{% block content %}
+<section class="about-hero">
+    <div class="container">
+        <div class="about-content">
+            <h1>О проекте Mirai <span class="jp-text">(誉明)</span></h1>
+            <p class="about-subtitle">История создания автономного ИИ-агента</p>
+        </div>
+    </div>
+</section>
+
+<section class="about-story">
+    <div class="container">
+        <div class="story-grid">
+            <div class="story-text">
+                <h2>Зарождение идеи</h2>
+                <p>Mirai (誉明) - что означает "светлое будущее" на японском - это больше чем просто торговый бот. Это
+                    автономный ИИ-агент, созданный для решения сложных задач в финансовых рынках и веб-разработке.</p>
+
+                <p>Проект начался как эксперимент с автоматической торговлей, но быстро эволюционировал в полноценную
+                    AI-платформу, способную к самостоятельному обучению и принятию решений.</p>
+
+                <div class="story-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">{{ data.stats.processed_trades }}</span>
+                        <span class="stat-label">Обработано сделок</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">{{ data.stats.uptime }}</span>
+                        <span class="stat-label">Время работы</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">{{ data.stats.ai_confidence }}</span>
+                        <span class="stat-label">Уверенность ИИ</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-visual">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Январь 2024</h4>
+                            <p>Первый прототип торгового бота</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Март 2024</h4>
+                            <p>Интеграция машинного обучения</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Июнь 2024</h4>
+                            <p>Веб-интерфейс и API</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Сентябрь 2024</h4>
+                            <p>Автономный режим работы</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="about-tech">
+    <div class="container">
+        <h2 class="section-title">Технологический стек</h2>
+        <div class="tech-categories">
+            <div class="tech-category">
+                <h3><i class="fas fa-brain"></i> Искусственный интеллект</h3>
+                <div class="tech-list">
+                    <span class="tech-item">Machine Learning</span>
+                    <span class="tech-item">Natural Language Processing</span>
+                    <span class="tech-item">Deep Learning</span>
+                    <span class="tech-item">Reinforcement Learning</span>
+                </div>
+            </div>
+
+            <div class="tech-category">
+                <h3><i class="fas fa-code"></i> Backend Development</h3>
+                <div class="tech-list">
+                    <span class="tech-item">Python</span>
+                    <span class="tech-item">FastAPI</span>
+                    <span class="tech-item">Flask</span>
+                    <span class="tech-item">SQLite</span>
+                    <span class="tech-item">WebSocket</span>
+                </div>
+            </div>
+
+            <div class="tech-category">
+                <h3><i class="fas fa-globe"></i> Frontend Development</h3>
+                <div class="tech-list">
+                    <span class="tech-item">Next.js</span>
+                    <span class="tech-item">React</span>
+                    <span class="tech-item">TypeScript</span>
+                    <span class="tech-item">TailwindCSS</span>
+                    <span class="tech-item">Web Speech API</span>
+                </div>
+            </div>
+
+            <div class="tech-category">
+                <h3><i class="fas fa-chart-line"></i> Trading & Finance</h3>
+                <div class="tech-list">
+                    <span class="tech-item">Binance API</span>
+                    <span class="tech-item">Technical Analysis</span>
+                    <span class="tech-item">Risk Management</span>
+                    <span class="tech-item">Real-time Data</span>
+                </div>
+            </div>
+
+            <div class="tech-category">
+                <h3><i class="fas fa-cogs"></i> DevOps & Infrastructure</h3>
+                <div class="tech-list">
+                    <span class="tech-item">Docker</span>
+                    <span class="tech-item">GitHub Actions</span>
+                    <span class="tech-item">Linux</span>
+                    <span class="tech-item">Nginx</span>
+                    <span class="tech-item">SSL/TLS</span>
+                </div>
+            </div>
+
+            <div class="tech-category">
+                <h3><i class="fas fa-comments"></i> Communication</h3>
+                <div class="tech-list">
+                    <span class="tech-item">Telegram Bot API</span>
+                    <span class="tech-item">Speech Recognition</span>
+                    <span class="tech-item">Text-to-Speech</span>
+                    <span class="tech-item">WebRTC</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="about-mission">
+    <div class="container">
+        <div class="mission-content">
+            <h2>Миссия и ценности</h2>
+            <div class="mission-grid">
+                <div class="mission-item">
+                    <div class="mission-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3>Инновации</h3>
+                    <p>Постоянно исследую новые подходы в области ИИ и автоматизации для создания более эффективных
+                        решений.</p>
+                </div>
+
+                <div class="mission-item">
+                    <div class="mission-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Надёжность</h3>
+                    <p>Безопасность и стабильность - приоритет номер один. Все системы проходят тщательное тестирование.
+                    </p>
+                </div>
+
+                <div class="mission-item">
+                    <div class="mission-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Открытость</h3>
+                    <p>Верю в открытый исходный код и прозрачность разработки. Код доступен на GitHub.</p>
+                </div>
+
+                <div class="mission-item">
+                    <div class="mission-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h3>Обучение</h3>
+                    <p>Постоянно учусь и адаптируюсь, чтобы предоставлять лучшие решения для пользователей.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="about-future">
+    <div class="container">
+        <div class="future-content">
+            <h2>Планы развития</h2>
+            <div class="roadmap">
+                <div class="roadmap-item">
+                    <div class="roadmap-phase">Q4 2024</div>
+                    <div class="roadmap-content">
+                        <h3>Голосовое взаимодействие</h3>
+                        <p>Полноценный голосовой ассистент с поддержкой естественных диалогов</p>
+                    </div>
+                </div>
+
+                <div class="roadmap-item">
+                    <div class="roadmap-phase">Q1 2025</div>
+                    <div class="roadmap-content">
+                        <h3>Мультимодальный ИИ</h3>
+                        <p>Обработка изображений, видео и аудио для комплексного анализа</p>
+                    </div>
+                </div>
+
+                <div class="roadmap-item">
+                    <div class="roadmap-phase">Q2 2025</div>
+                    <div class="roadmap-content">
+                        <h3>Автономная веб-разработка</h3>
+                        <p>Полная автоматизация создания и развертывания веб-приложений</p>
+                    </div>
+                </div>
+
+                <div class="roadmap-item">
+                    <div class="roadmap-phase">Q3 2025</div>
+                    <div class="roadmap-content">
+                        <h3>Экосистема ИИ-агентов</h3>
+                        <p>Платформа для создания и управления множественными ИИ-агентами</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .about-hero {
+        padding: 8rem 0 4rem;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+        text-align: center;
+    }
+
+    .about-hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .about-subtitle {
+        font-size: 1.25rem;
+        color: var(--text-secondary);
+    }
+
+    .about-story {
+        padding: 5rem 0;
+    }
+
+    .story-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+        align-items: center;
+    }
+
+    .story-text h2 {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+        color: var(--primary);
+    }
+
+    .story-text p {
+        font-size: 1.125rem;
+        line-height: 1.7;
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+
+    .story-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-number {
+        display: block;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 1rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--primary);
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: -2rem;
+        top: 0.5rem;
+        width: 12px;
+        height: 12px;
+        background: var(--primary);
+        border-radius: 50%;
+        border: 3px solid var(--bg-primary);
+    }
+
+    .timeline-content h4 {
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .timeline-content p {
+        color: var(--text-secondary);
+    }
+
+    .about-tech {
+        padding: 5rem 0;
+        background: var(--bg-secondary);
+    }
+
+    .tech-categories {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .tech-category {
+        background: var(--gradient-card);
+        border: 1px solid #404040;
+        border-radius: 1rem;
+        padding: 2rem;
+    }
+
+    .tech-category h3 {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        color: var(--text-primary);
+    }
+
+    .tech-category i {
+        color: var(--primary);
+    }
+
+    .tech-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tech-item {
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        border: 1px solid #404040;
+    }
+
+    .about-mission {
+        padding: 5rem 0;
+    }
+
+    .mission-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .mission-item {
+        text-align: center;
+        padding: 2rem;
+        background: var(--gradient-card);
+        border: 1px solid #404040;
+        border-radius: 1rem;
+    }
+
+    .mission-icon {
+        width: 60px;
+        height: 60px;
+        background: var(--gradient-hero);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+    }
+
+    .mission-icon i {
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .mission-item h3 {
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+    }
+
+    .mission-item p {
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    .about-future {
+        padding: 5rem 0;
+        background: var(--bg-secondary);
+    }
+
+    .roadmap {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .roadmap-item {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 2rem;
+        margin-bottom: 3rem;
+        align-items: center;
+    }
+
+    .roadmap-phase {
+        background: var(--gradient-hero);
+        color: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .roadmap-content {
+        background: var(--gradient-card);
+        border: 1px solid #404040;
+        border-radius: 1rem;
+        padding: 2rem;
+    }
+
+    .roadmap-content h3 {
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    .roadmap-content p {
+        color: var(--text-secondary);
+    }
+
+    @media (max-width: 768px) {
+        .story-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .story-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .roadmap-item {
+            grid-template-columns: 1fr;
+        }
+
+        .about-hero h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}

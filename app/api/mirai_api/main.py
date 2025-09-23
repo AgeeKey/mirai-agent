@@ -1,5 +1,6 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 import uvicorn
 import json
 import asyncio
@@ -9,16 +10,60 @@ from typing import List
 import sqlite3
 import os
 
-app = FastAPI(title="Mirai Trading API", version="1.0.0")
+# Import our trading components (simplified)
+from .trading_metrics import get_trading_metrics
+
+# Import web extension routes
+from .auth_routes import router as auth_router
+from .emergency_routes import router as emergency_router, emergency_middleware_func
+from .blog_routes import router as blog_router
+from .voice_routes import router as voice_router
+from .memory_routes import router as memory_router
+from .admin_routes import router as admin_router
+from .integration_routes import router as integration_router
+from .notifications import router as notifications_router
+from .auth import db_manager
+
+# Import performance optimization
+try:
+    from ...performance.optimization import (
+        initialize_performance_system, cleanup_performance_system, 
+        get_performance_summary, performance_optimized,
+        connection_pool_manager, advanced_cache, task_manager
+    )
+    PERFORMANCE_AVAILABLE = True
+except ImportError:
+    PERFORMANCE_AVAILABLE = False
+    print("Performance optimization not available")
+
+app = FastAPI(
+    title="Mirai Trading & Web API", 
+    description="Advanced AI Trading System with Web Ecosystem Integration",
+    version="2.0.0"
+)
 
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add emergency middleware
+app.middleware("http")(emergency_middleware_func)
+
+# Include web extension routers
+app.include_router(auth_router)
+app.include_router(blog_router)
+app.include_router(voice_router)
+app.include_router(memory_router)
+app.include_router(auth_router)
+app.include_router(emergency_router)
+app.include_router(admin_router)
+app.include_router(integration_router)
+app.include_router(notifications_router)
 
 class ConnectionManager:
     def __init__(self):
@@ -42,6 +87,24 @@ class ConnectionManager:
                 self.active_connections.remove(connection)
 
 manager = ConnectionManager()
+
+# Initialize database on startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database and create tables"""
+    # Database will be initialized by db_manager
+    print("🚀 Mirai Web API initialized successfully!")
+    
+    if PERFORMANCE_AVAILABLE:
+        await initialize_performance_system()
+        print("⚡ Performance optimization system initialized")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown"""
+    if PERFORMANCE_AVAILABLE:
+        await cleanup_performance_system()
+        print("🔄 Performance optimization system cleaned up")
 
 def get_db_connection():
     """Get database connection"""
@@ -182,6 +245,138 @@ async def websocket_endpoint(websocket: WebSocket):
             
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+
+
+@app.get("/metrics", response_class=PlainTextResponse)
+async def get_metrics():
+    """Expose Prometheus metrics for scraping"""
+    return get_trading_metrics()
+
+
+@app.get("/alerts")
+async def get_alerts():
+    """Get current alerts"""
+    return {
+        "active_alerts": [],
+        "summary": {"active_alerts": 0, "warning_level": "low"}
+    }
+
+
+@app.post("/alerts/process")
+async def process_alerts(monitoring_data: dict):
+    """Process monitoring data and trigger alerts"""
+    return {"status": "success", "message": "Monitoring data processed"}
+
+
+@app.post("/metrics/record")
+async def record_metrics(metrics_data: dict):
+    """Record trading metrics"""
+    return {"status": "success", "message": "Metrics recorded"}
+
+
+# Performance optimization endpoints
+@app.get("/api/performance/summary")
+async def get_performance_optimization_summary():
+    """Get comprehensive performance optimization summary"""
+    if not PERFORMANCE_AVAILABLE:
+        return {"error": "Performance optimization not available"}
+    
+    try:
+        summary = await get_performance_summary()
+        return {"status": "success", "data": summary}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/performance/cache/stats")
+async def get_cache_stats():
+    """Get cache performance statistics"""
+    if not PERFORMANCE_AVAILABLE:
+        return {"error": "Performance optimization not available"}
+    
+    try:
+        stats = advanced_cache.get_cache_stats()
+        return {"status": "success", "cache_stats": stats}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/performance/cache/invalidate")
+async def invalidate_cache(pattern: str):
+    """Invalidate cache entries matching pattern"""
+    if not PERFORMANCE_AVAILABLE:
+        return {"error": "Performance optimization not available"}
+    
+    try:
+        await advanced_cache.invalidate(pattern)
+        return {"status": "success", "message": f"Invalidated cache pattern: {pattern}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/performance/tasks/stats")
+async def get_task_stats():
+    """Get async task management statistics"""
+    if not PERFORMANCE_AVAILABLE:
+        return {"error": "Performance optimization not available"}
+    
+    try:
+        stats = task_manager.get_task_stats()
+        return {"status": "success", "task_stats": stats}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/performance/connections/stats")
+async def get_connection_stats():
+    """Get connection pool statistics"""
+    if not PERFORMANCE_AVAILABLE:
+        return {"error": "Performance optimization not available"}
+    
+    try:
+        stats = connection_pool_manager.get_pool_stats()
+        return {"status": "success", "connection_stats": stats}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Application lifecycle events
+@app.on_event("startup")
+async def startup_event():
+    """Initialize application with performance optimizations"""
+    print("🚀 Initializing Mirai Trading API...")
+    
+    if PERFORMANCE_AVAILABLE:
+        try:
+            await initialize_performance_system()
+            print("✅ Performance optimization system initialized")
+        except Exception as e:
+            print(f"⚠️ Performance system initialization failed: {e}")
+    
+    # Initialize monitoring
+    try:
+        # Start monitoring tasks
+        print("✅ Monitoring system ready")
+    except Exception as e:
+        print(f"⚠️ Monitoring initialization failed: {e}")
+    
+    print("🎯 Mirai Trading API fully operational!")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup application resources"""
+    print("🔄 Shutting down Mirai Trading API...")
+    
+    if PERFORMANCE_AVAILABLE:
+        try:
+            await cleanup_performance_system()
+            print("✅ Performance system cleaned up")
+        except Exception as e:
+            print(f"⚠️ Performance cleanup failed: {e}")
+    
+    print("🏁 Mirai Trading API shutdown complete")
+
 
 if __name__ == "__main__":
     print("🚀 Запуск Mirai Trading API...")

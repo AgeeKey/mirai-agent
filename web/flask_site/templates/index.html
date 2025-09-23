@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-container">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">
+                    <span class="wave">👋</span>
+                    Привет! Я <strong>Mirai</strong>
+                    <span class="jp-text">(誉明)</span>
+                </h1>
+                <p class="hero-subtitle">{{ data.subtitle }}</p>
+                <p class="hero-description">{{ data.description }}</p>
+
+                <div class="hero-actions">
+                    <a href="{{ url_for('capabilities') }}" class="btn btn-primary">
+                        <i class="fas fa-rocket"></i>
+                        Изучить возможности
+                    </a>
+                    <a href="https://aimirai.online" class="btn btn-secondary" target="_blank">
+                        <i class="fas fa-chart-line"></i>
+                        Торговая панель
+                    </a>
+                </div>
+
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-value">{{ data.stats.trading_accuracy }}</span>
+                        <span class="stat-label">Точность торговли</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">{{ data.stats.uptime }}</span>
+                        <span class="stat-label">Время работы</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">{{ data.stats.processed_trades }}</span>
+                        <span class="stat-label">Обработано сделок</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">{{ data.stats.ai_confidence }}</span>
+                        <span class="stat-label">Уверенность ИИ</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="ai-avatar">
+                    <div class="avatar-circle">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="pulse-rings">
+                        <div class="ring ring-1"></div>
+                        <div class="ring ring-2"></div>
+                        <div class="ring ring-3"></div>
+                    </div>
+                </div>
+
+                <div class="live-stats">
+                    <div class="live-stat">
+                        <span class="live-indicator"></span>
+                        <span>AI активен</span>
+                    </div>
+                    <div class="live-stat">
+                        <span class="live-indicator green"></span>
+                        <span>Торговля работает</span>
+                    </div>
+                    <div class="live-stat">
+                        <span class="live-indicator blue"></span>
+                        <span>Анализирую рынок</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="scroll-indicator">
+            <span>Прокрути вниз</span>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </div>
+</section>
+
+<!-- Capabilities Preview -->
+<section class="capabilities-preview">
+    <div class="container">
+        <h2 class="section-title">Что я умею</h2>
+        <div class="capabilities-grid">
+            {% for capability in data.capabilities %}
+            <div class="capability-card">
+                <div class="capability-icon">{{ capability.title.split()[0] }}</div>
+                <h3>{{ capability.title.split(' ', 1)[1] }}</h3>
+                <p>{{ capability.description }}</p>
+                <ul class="feature-list">
+                    {% for feature in capability.features[:2] %}
+                    <li><i class="fas fa-check"></i> {{ feature }}</li>
+                    {% endfor %}
+                </ul>
+                <div class="capability-footer">
+                    <a href="{{ url_for('capabilities') }}">Подробнее <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Portfolio Preview -->
+<section class="portfolio-preview">
+    <div class="container">
+        <h2 class="section-title">Мои проекты</h2>
+        <div class="portfolio-grid">
+            {% for project in data.portfolio[:2] %}
+            <div class="portfolio-card">
+                <div class="portfolio-header">
+                    <h3>{{ project.title }}</h3>
+                    <span class="status status-{{ project.status.lower() }}">{{ project.status }}</span>
+                </div>
+                <p>{{ project.description }}</p>
+                <div class="tech-stack">
+                    {% for tech in project.tech[:3] %}
+                    <span class="tech-tag">{{ tech }}</span>
+                    {% endfor %}
+                </div>
+                {% if project.url %}
+                <a href="{{ project.url }}" class="portfolio-link" target="_blank">
+                    Открыть проект <i class="fas fa-external-link-alt"></i>
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="portfolio-cta">
+            <a href="{{ url_for('portfolio') }}" class="btn btn-outline">
+                Посмотреть все проекты
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Live Trading Data -->
+<section class="live-data">
+    <div class="container">
+        <h2 class="section-title">Торговля в реальном времени</h2>
+        <div class="trading-dashboard">
+            <div class="trading-widget">
+                <h3><i class="fas fa-chart-line"></i> Дневная прибыль</h3>
+                <div class="metric-value" id="dailyPnl">Загрузка...</div>
+                <div class="metric-change" id="pnlChange">+0.0%</div>
+            </div>
+
+            <div class="trading-widget">
+                <h3><i class="fas fa-percentage"></i> Винрейт</h3>
+                <div class="metric-value" id="winRate">{{ data.stats.trading_accuracy }}</div>
+                <div class="metric-label">Последние 50 сделок</div>
+            </div>
+
+            <div class="trading-widget">
+                <h3><i class="fas fa-shield-alt"></i> Уровень риска</h3>
+                <div class="metric-value" id="riskLevel">Средний</div>
+                <div class="metric-label">3/6 дневных сделок</div>
+            </div>
+
+            <div class="trading-widget">
+                <h3><i class="fas fa-brain"></i> Уверенность ИИ</h3>
+                <div class="metric-value" id="aiConfidence">{{ data.stats.ai_confidence }}</div>
+                <div class="metric-label">Текущий анализ</div>
+            </div>
+        </div>
+
+        <div class="trading-cta">
+            <a href="https://aimirai.online" class="btn btn-trading" target="_blank">
+                <i class="fas fa-external-link-alt"></i>
+                Открыть полную торговую панель
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Contact CTA -->
+<section class="contact-cta">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Готов работать вместе?</h2>
+            <p>Свяжись со мной для обсуждения проектов или просто поговорить об ИИ</p>
+            <div class="cta-actions">
+                <a href="{{ url_for('contact') }}" class="btn btn-primary">
+                    <i class="fas fa-envelope"></i>
+                    Связаться
+                </a>
+                <button class="btn btn-voice" id="heroVoiceBtn">
+                    <i class="fas fa-microphone"></i>
+                    Поговорить голосом
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Live trading data updates
+    async function updateTradingData() {
+        try {
+            const response = await fetch('https://aimirai.online/api/trading/status');
+            const data = await response.json();
+
+            // Update metrics if elements exist
+            const dailyPnl = document.getElementById('dailyPnl');
+            const winRate = document.getElementById('winRate');
+            const riskLevel = document.getElementById('riskLevel');
+            const aiConfidence = document.getElementById('aiConfidence');
+
+            if (dailyPnl && data.daily_pnl) {
+                dailyPnl.textContent = `$${data.daily_pnl.toFixed(2)}`;
+            }
+
+            if (winRate && data.win_rate) {
+                winRate.textContent = `${data.win_rate}%`;
+            }
+
+            if (riskLevel && data.risk_level) {
+                riskLevel.textContent = data.risk_level.charAt(0).toUpperCase() + data.risk_level.slice(1);
+            }
+
+            if (aiConfidence && data.ai_confidence) {
+                aiConfidence.textContent = `${Math.round(data.ai_confidence * 100)}%`;
+            }
+
+        } catch (error) {
+            console.log('Trading API недоступен:', error);
+        }
+    }
+
+    // Update data every 30 seconds
+    updateTradingData();
+    setInterval(updateTradingData, 30000);
+
+    // Hero voice button
+    document.getElementById('heroVoiceBtn')?.addEventListener('click', function () {
+        const voiceBtn = document.getElementById('voiceBtn');
+        if (voiceBtn) {
+            voiceBtn.click();
+        }
+    });
+</script>
+{% endblock %}

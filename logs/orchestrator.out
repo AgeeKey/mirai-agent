@@ -1,0 +1,23 @@
+nohup: ignoring input
+2025-09-22 20:43:47,901 - __main__ - INFO - Orchestrator service initialized
+/root/mirai-agent/microservices/ai-engine/orchestrator/main.py:691: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+INFO:     Started server process [462045]
+INFO:     Waiting for application startup.
+2025-09-22 20:43:47,927 - __main__ - INFO - Mirai AI Orchestrator starting up...
+2025-09-22 20:43:48,130 - __main__ - INFO - Agent health check - SuperAGI: ❌, AutoGPT: ❌
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+INFO:     127.0.0.1:42832 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43796 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43806 - "GET /status HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53620 - "GET /status HTTP/1.1" 404 Not Found
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [462045]

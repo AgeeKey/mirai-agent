@@ -1,0 +1,360 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Mirai Agent - AI Performance Dashboard",
+    "tags": ["mirai", "ai", "performance"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "AI System Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"mirai-ai-orchestrator\"}",
+            "legendFormat": "AI Orchestrator Status"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            },
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "DOWN"
+                  },
+                  "1": {
+                    "text": "UP"
+                  }
+                },
+                "type": "value"
+              }
+            ]
+          }
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 6,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "AI Confidence Score",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "mirai_ai_confidence_score",
+            "legendFormat": "Confidence"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 40
+                },
+                {
+                  "color": "green",
+                  "value": 70
+                }
+              ]
+            },
+            "max": 100,
+            "min": 0,
+            "unit": "percent"
+          }
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 6,
+          "x": 6,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "AI Success Rate",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "mirai_ai_success_rate_percent",
+            "legendFormat": "Success Rate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 60
+                },
+                {
+                  "color": "green",
+                  "value": 80
+                }
+              ]
+            },
+            "max": 100,
+            "min": 0,
+            "unit": "percent"
+          }
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 6,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 4,
+        "title": "System Uptime",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "mirai_system_uptime_seconds",
+            "legendFormat": "Uptime"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                }
+              ]
+            },
+            "unit": "dtdurations"
+          }
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 6,
+          "x": 18,
+          "y": 0
+        }
+      },
+      {
+        "id": 5,
+        "title": "AI Response Time Distribution",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, mirai_ai_response_time_seconds)",
+            "legendFormat": "99th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.95, mirai_ai_response_time_seconds)",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.50, mirai_ai_response_time_seconds)",
+            "legendFormat": "Median"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "s"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 6
+        }
+      },
+      {
+        "id": 6,
+        "title": "AI Decisions by Type",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(mirai_ai_decisions_total[5m]) * 60",
+            "legendFormat": "{{decision_type}} per minute"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 6
+        }
+      },
+      {
+        "id": 7,
+        "title": "AI Confidence Trend",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "mirai_ai_confidence_score",
+            "legendFormat": "AI Confidence"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 14
+        }
+      },
+      {
+        "id": 8,
+        "title": "System Resource Usage",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "mirai_system_cpu_percent",
+            "legendFormat": "CPU Usage"
+          },
+          {
+            "expr": "mirai_system_memory_percent",
+            "legendFormat": "Memory Usage"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 22
+        }
+      },
+      {
+        "id": 9,
+        "title": "Emergency Events",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "mirai_emergency_stops_total",
+            "legendFormat": "Total Emergency Stops"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 1
+                },
+                {
+                  "color": "red",
+                  "value": 3
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 22
+        }
+      }
+    ],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {},
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "refresh": "10s",
+    "schemaVersion": 30,
+    "version": 1,
+    "links": []
+  }
+}

@@ -1,0 +1,30 @@
+# Mirai Ecosystem - Enhanced API
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    sqlite3 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip install fastapi uvicorn aiofiles pydantic
+
+# Copy ecosystem API
+COPY mirai_ecosystem_api.py .
+
+# Create directories and set permissions
+RUN mkdir -p /app/state /app/logs && \
+    useradd -m -u 1001 mirai && \
+    chown -R mirai:mirai /app
+
+USER mirai
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/healthz || exit 1
+
+CMD ["python", "mirai_ecosystem_api.py"]

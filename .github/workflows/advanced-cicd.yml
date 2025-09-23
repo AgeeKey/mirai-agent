@@ -1,0 +1,666 @@
+name: Advanced CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ['v*']
+  pull_request:
+    branches: [main, develop]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.changes.outputs.api }}
+      trader: ${{ steps.changes.outputs.trader }}
+      web: ${{ steps.changes.outputs.web }}
+      telegram: ${{ steps.changes.outputs.telegram }}
+      docs: ${{ steps.changes.outputs.docs }}
+      infra: ${{ steps.changes.outputs.infra }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            api:
+              - 'app/api/**'
+              - 'app/security/**'
+              - 'app/performance/**'
+            trader:
+              - 'app/trader/**'
+              - 'app/agent/**'
+            web:
+              - 'web/**'
+            telegram:
+              - 'app/telegram_bot/**'
+            docs:
+              - 'docs/**'
+              - 'README.md'
+              - 'sdk/**'
+            infra:
+              - 'infra/**'
+              - 'docker-compose*.yml'
+              - 'Dockerfile*'
+              - '.github/workflows/**'
+
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, "3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      
+      - name: Code formatting check
+        run: |
+          black --check --diff app/ tests/ --line-length 120
+          isort --check-only --diff app/ tests/
+      
+      - name: Linting
+        run: |
+          flake8 app/ tests/ --max-line-length=120
+          mypy app/ --ignore-missing-imports
+      
+      - name: Security check
+        run: |
+          bandit -r app/ -f json -o bandit-report.json
+          safety check
+      
+      - name: Upload security report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-report-${{ matrix.python-version }}
+          path: bandit-report.json
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, "3.10", "3.11"]
+        component: [api, trader, agent, security, performance]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      
+      - name: Run unit tests
+        run: |
+          pytest app/${{ matrix.component }}/tests/ \
+            --cov=app/${{ matrix.component }} \
+            --cov-report=xml \
+            --cov-report=html \
+            --junitxml=junit-${{ matrix.component }}-${{ matrix.python-version }}.xml \
+            -v
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-${{ matrix.component }}-${{ matrix.python-version }}
+          path: |
+            junit-*.xml
+            htmlcov/
+            .coverage
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [detect-changes, unit-tests]
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: mirai_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:testpass@localhost/mirai_test
+      REDIS_URL: redis://localhost:6379/0
+      BINANCE_TESTNET: true
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      
+      - name: Setup test database
+        run: |
+          python -c "
+          import sqlite3
+          conn = sqlite3.connect('state/mirai_test.db')
+          conn.execute('CREATE TABLE IF NOT EXISTS trades (id INTEGER PRIMARY KEY)')
+          conn.close()
+          "
+      
+      - name: Run integration tests
+        run: |
+          pytest tests/integration/ \
+            --cov=app \
+            --cov-report=xml \
+            --junitxml=junit-integration.xml \
+            -v --tb=short
+      
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: integration-test-results
+          path: |
+            junit-integration.xml
+            .coverage
+
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install locust
+      
+      - name: Start services
+        run: |
+          docker-compose -f docker-compose.yml up -d redis postgres
+          sleep 10
+      
+      - name: Run performance tests
+        run: |
+          pytest tests/load/ -v --tb=short
+      
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-test-results
+          path: performance-report.html
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    needs: [code-quality]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+      
+      - name: CodeQL Analysis
+        uses: github/codeql-action/init@v2
+        with:
+          languages: python, javascript
+      
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+      
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  build-images:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [code-quality, unit-tests]
+    strategy:
+      matrix:
+        component: [api, trader, telegram-bot, web]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.component }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+      
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: app/${{ matrix.component }}/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [integration-tests, build-images]
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://mirai-staging.example.com
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Kubernetes
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+      
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name mirai-staging
+      
+      - name: Deploy to staging
+        run: |
+          # Update image tags in deployment manifests
+          sed -i "s|IMAGE_TAG|${{ github.sha }}|g" infra/k8s/staging/
+          
+          # Apply manifests
+          kubectl apply -f infra/k8s/staging/
+          
+          # Wait for rollout
+          kubectl rollout status deployment/mirai-api-staging
+          kubectl rollout status deployment/mirai-trader-staging
+          kubectl rollout status deployment/mirai-web-staging
+      
+      - name: Run smoke tests
+        run: |
+          sleep 30  # Wait for services to start
+          
+          # Get staging URL
+          STAGING_URL=$(kubectl get ingress mirai-staging -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          
+          # Basic health checks
+          curl -f https://$STAGING_URL/api/health
+          curl -f https://$STAGING_URL/health
+      
+      - name: Notify deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          text: 'Staging deployment completed'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [integration-tests, performance-tests, security-scan, build-images]
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: production
+      url: https://mirai.example.com
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Kubernetes
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+      
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name mirai-production
+      
+      - name: Blue-Green Deployment
+        run: |
+          # Create deployment script
+          cat > deploy.sh << 'EOF'
+          #!/bin/bash
+          set -e
+          
+          # Configuration
+          NAMESPACE="mirai-production"
+          NEW_VERSION="${{ github.sha }}"
+          SERVICES=("api" "trader" "web")
+          
+          # Create new deployment (green)
+          for service in "${SERVICES[@]}"; do
+            echo "Deploying $service-green..."
+            
+            # Update image tag
+            sed "s|IMAGE_TAG|$NEW_VERSION|g" infra/k8s/production/deployment-$service.yaml > /tmp/$service-green.yaml
+            sed -i "s|$service|$service-green|g" /tmp/$service-green.yaml
+            
+            # Apply green deployment
+            kubectl apply -f /tmp/$service-green.yaml -n $NAMESPACE
+            
+            # Wait for green to be ready
+            kubectl rollout status deployment/$service-green -n $NAMESPACE --timeout=300s
+          done
+          
+          # Health check green deployment
+          echo "Running health checks on green deployment..."
+          sleep 30
+          
+          # Get green service endpoints and test
+          for service in "${SERVICES[@]}"; do
+            if [[ "$service" == "api" ]]; then
+              GREEN_IP=$(kubectl get svc $service-green -n $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+              curl -f "http://$GREEN_IP/api/health" || exit 1
+            fi
+          done
+          
+          # Switch traffic to green (update main service selectors)
+          echo "Switching traffic to green deployment..."
+          for service in "${SERVICES[@]}"; do
+            kubectl patch service $service -n $NAMESPACE -p '{"spec":{"selector":{"version":"green"}}}'
+          done
+          
+          # Wait and verify
+          sleep 60
+          
+          # Final health check
+          PROD_URL=$(kubectl get ingress mirai-production -n $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          curl -f "https://$PROD_URL/api/health"
+          
+          # Clean up old blue deployment
+          echo "Cleaning up old blue deployment..."
+          for service in "${SERVICES[@]}"; do
+            kubectl delete deployment $service-blue -n $NAMESPACE --ignore-not-found=true
+            kubectl label deployment $service $service-green --overwrite
+          done
+          
+          echo "Blue-green deployment completed successfully!"
+          EOF
+          
+          chmod +x deploy.sh
+          ./deploy.sh
+      
+      - name: Post-deployment verification
+        run: |
+          # Extended health checks
+          PROD_URL=$(kubectl get ingress mirai-production -n mirai-production -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          
+          # API health
+          curl -f "https://$PROD_URL/api/health"
+          curl -f "https://$PROD_URL/api/trading/status"
+          
+          # Web health
+          curl -f "https://$PROD_URL/health"
+          
+          # Trading system checks
+          curl -f "https://$PROD_URL/api/performance/summary"
+          curl -f "https://$PROD_URL/api/monitoring/metrics"
+      
+      - name: Setup rollback trigger
+        run: |
+          # Create rollback workflow trigger
+          cat > rollback-info.json << EOF
+          {
+            "deployment_id": "${{ github.run_id }}",
+            "commit_sha": "${{ github.sha }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "services": ["api", "trader", "web"],
+            "namespace": "mirai-production"
+          }
+          EOF
+          
+          # Store rollback information
+          kubectl create configmap rollback-${{ github.run_id }} \
+            --from-file=rollback-info.json \
+            -n mirai-production
+      
+      - name: Update deployment status
+        run: |
+          # Update deployment tracking
+          kubectl annotate deployment mirai-api-production \
+            deployment.kubernetes.io/revision="${{ github.run_id }}" \
+            -n mirai-production
+      
+      - name: Notify production deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#production'
+          text: |
+            Production deployment ${{ job.status }}
+            Version: ${{ github.sha }}
+            Commit: ${{ github.event.head_commit.message }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  rollback:
+    name: Automated Rollback
+    runs-on: ubuntu-latest
+    if: failure() && github.ref == 'refs/heads/main'
+    needs: [deploy-production]
+    environment:
+      name: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Kubernetes
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+      
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name mirai-production
+      
+      - name: Execute rollback
+        run: |
+          # Get previous successful deployment
+          PREVIOUS_DEPLOYMENT=$(kubectl get configmaps -n mirai-production \
+            -l type=rollback \
+            --sort-by=.metadata.creationTimestamp \
+            -o jsonpath='{.items[-2].metadata.name}')
+          
+          if [[ -n "$PREVIOUS_DEPLOYMENT" ]]; then
+            echo "Rolling back to $PREVIOUS_DEPLOYMENT"
+            
+            # Get rollback info
+            kubectl get configmap $PREVIOUS_DEPLOYMENT -n mirai-production \
+              -o jsonpath='{.data.rollback-info\.json}' > rollback-info.json
+            
+            PREVIOUS_SHA=$(jq -r '.commit_sha' rollback-info.json)
+            
+            # Rollback each service
+            SERVICES=("api" "trader" "web")
+            for service in "${SERVICES[@]}"; do
+              echo "Rolling back $service to $PREVIOUS_SHA..."
+              
+              kubectl set image deployment/mirai-$service-production \
+                mirai-$service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-$service:$PREVIOUS_SHA \
+                -n mirai-production
+              
+              kubectl rollout status deployment/mirai-$service-production \
+                -n mirai-production --timeout=300s
+            done
+            
+            echo "Rollback completed successfully"
+          else
+            echo "No previous deployment found for rollback"
+            exit 1
+          fi
+      
+      - name: Verify rollback
+        run: |
+          PROD_URL=$(kubectl get ingress mirai-production -n mirai-production -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          curl -f "https://$PROD_URL/api/health"
+      
+      - name: Notify rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              "text": "🚨 PRODUCTION ROLLBACK EXECUTED",
+              "attachments": [
+                {
+                  "color": "warning",
+                  "fields": [
+                    {"title": "Failed Deployment", "value": "${{ github.sha }}", "short": true},
+                    {"title": "Rollback Status", "value": "Completed", "short": true}
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: always()
+    steps:
+      - name: Cleanup old images
+        run: |
+          # Remove images older than 30 days
+          OLD_IMAGES=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/user/packages/container/${{ env.IMAGE_NAME }}/versions" \
+            | jq -r '.[] | select(.created_at < (now - 2592000) | todateiso8601) | .id')
+          
+          for image_id in $OLD_IMAGES; do
+            curl -X DELETE -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/user/packages/container/${{ env.IMAGE_NAME }}/versions/$image_id"
+          done
+
+  monitoring:
+    name: Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: success() && github.ref == 'refs/heads/main'
+    steps:
+      - name: Setup monitoring alerts
+        run: |
+          # Configure Grafana alerts for new deployment
+          curl -X POST "https://grafana.example.com/api/alerts" \
+            -H "Authorization: Bearer ${{ secrets.GRAFANA_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "title": "Post-deployment monitoring - ${{ github.sha }}",
+              "message": "Monitoring deployment ${{ github.sha }} for 1 hour",
+              "tags": ["deployment", "production"],
+              "time": "now",
+              "timeEnd": "now+1h"
+            }'
+      
+      - name: Extended health monitoring
+        run: |
+          # Monitor for 30 minutes post-deployment
+          for i in {1..30}; do
+            echo "Health check $i/30..."
+            
+            PROD_URL=$(kubectl get ingress mirai-production -n mirai-production -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+            
+            if ! curl -f "https://$PROD_URL/api/health"; then
+              echo "Health check failed at minute $i"
+              # Trigger alert but don't fail deployment
+              curl -X POST "${{ secrets.ALERT_WEBHOOK }}" \
+                -d "Mirai production health check failed at minute $i post-deployment"
+            fi
+            
+            sleep 60
+          done
+          
+          echo "Extended monitoring completed successfully"

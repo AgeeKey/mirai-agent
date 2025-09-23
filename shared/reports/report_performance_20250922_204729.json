@@ -1,0 +1,27 @@
+{
+  "type": "performance",
+  "period": "24h",
+  "generated_at": "2025-09-22T20:47:29.091632",
+  "agent": "local",
+  "data": {
+    "period_start": "2025-09-21T20:47:29.091555",
+    "period_end": "2025-09-22T20:47:29.091579",
+    "task_count": 1,
+    "task_types": {
+      "unknown": 1
+    },
+    "agent_usage": {
+      "local": 1
+    },
+    "performance_metrics": {
+      "avg_duration": 0,
+      "success_rate": 0.0,
+      "total_tasks": 1
+    }
+  },
+  "summary": {
+    "total_tasks": 1,
+    "completed_tasks": 0,
+    "success_rate": 0.0
+  }
+}

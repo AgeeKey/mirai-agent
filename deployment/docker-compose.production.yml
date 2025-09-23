@@ -1,0 +1,410 @@
+version: '3.8'
+
+# Production deployment for aimirai.online and aimirai.info
+# Multi-domain architecture with SSL, monitoring, and scalability
+
+networks:
+  mirai-frontend:
+    driver: bridge
+  mirai-backend:
+    driver: bridge
+    internal: true
+  mirai-monitoring:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  nginx_cache:
+  letsencrypt_certs:
+  letsencrypt_www:
+  prometheus_data:
+  grafana_data:
+  mirai_logs:
+  mirai_state:
+
+services:
+  # Nginx Reverse Proxy with SSL
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: mirai-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployment/nginx/aimirai.online.conf:/etc/nginx/conf.d/aimirai.online.conf:ro
+      - ./deployment/nginx/aimirai.info.conf:/etc/nginx/conf.d/aimirai.info.conf:ro
+      - ./deployment/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - letsencrypt_certs:/etc/letsencrypt:ro
+      - letsencrypt_www:/var/www/certbot:ro
+      - nginx_cache:/var/cache/nginx
+      - mirai_logs:/var/log/nginx
+    networks:
+      - mirai-frontend
+    depends_on:
+      - mirai-api-trading
+      - mirai-api-services
+      - mirai-dashboard-trading
+      - mirai-dashboard-services
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.mirai.service=nginx"
+      - "com.mirai.role=proxy"
+
+  # SSL Certificate Management
+  certbot:
+    image: certbot/certbot:latest
+    container_name: mirai-certbot
+    volumes:
+      - letsencrypt_certs:/etc/letsencrypt
+      - letsencrypt_www:/var/www/certbot
+    command: >-
+      sh -c "certbot certonly --webroot --webroot-path=/var/www/certbot
+      --email admin@aimirai.info --agree-tos --no-eff-email
+      -d aimirai.online -d www.aimirai.online
+      -d aimirai.info -d www.aimirai.info && 
+      trap exit TERM; while :; do certbot renew; sleep 12h & wait $!; done;"
+    depends_on:
+      - nginx
+    labels:
+      - "com.mirai.service=certbot"
+
+  # ============ TRADING PLATFORM (aimirai.online) ============
+  
+  # Trading API
+  mirai-api-trading:
+    build:
+      context: ./app/api
+      dockerfile: Dockerfile
+    container_name: mirai-api-trading
+    restart: unless-stopped
+    environment:
+      - PYTHONPATH=/app
+      - DATABASE_URL=postgresql://mirai_trading:${POSTGRES_TRADING_PASSWORD}@postgres:5432/mirai_trading_db
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGINS=https://aimirai.online,https://www.aimirai.online
+      - TRADING_MODE=live
+      - PLATFORM_TYPE=trading
+      - DOMAIN=aimirai.online
+    volumes:
+      - mirai_state:/app/state
+      - mirai_logs:/app/logs
+      - ./configs:/app/configs:ro
+    networks:
+      - mirai-frontend
+      - mirai-backend
+    depends_on:
+      - postgres
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    labels:
+      - "com.mirai.service=api"
+      - "com.mirai.platform=trading"
+      - "com.mirai.domain=aimirai.online"
+
+  # Trading Dashboard
+  mirai-dashboard-trading:
+    build:
+      context: ./web/services
+      dockerfile: Dockerfile
+    container_name: mirai-dashboard-trading
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=https://aimirai.online
+      - NEXT_PUBLIC_WS_URL=wss://aimirai.online/ws
+      - NEXT_PUBLIC_PLATFORM=trading
+      - NEXT_PUBLIC_DOMAIN=aimirai.online
+      - NODE_ENV=production
+    networks:
+      - mirai-frontend
+    depends_on:
+      - mirai-api-trading
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.mirai.service=dashboard"
+      - "com.mirai.platform=trading"
+      - "com.mirai.domain=aimirai.online"
+
+  # Trading Agent
+  mirai-agent-trading:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mirai-agent-trading
+    restart: unless-stopped
+    environment:
+      - PYTHONPATH=/app
+      - BINANCE_API_KEY=${BINANCE_API_KEY}
+      - BINANCE_API_SECRET=${BINANCE_API_SECRET}
+      - BINANCE_TESTNET=${BINANCE_TESTNET:-true}
+      - REDIS_URL=redis://redis:6379/1
+      - RISK_MANAGEMENT=strict
+      - PLATFORM_TYPE=trading
+    volumes:
+      - mirai_state:/app/state
+      - mirai_logs:/app/logs
+      - ./configs:/app/configs:ro
+    networks:
+      - mirai-backend
+    depends_on:
+      - redis
+      - mirai-api-trading
+    labels:
+      - "com.mirai.service=agent"
+      - "com.mirai.platform=trading"
+
+  # Trading Microservices Gateway (Phase 2)
+  mirai-gateway-trading:
+    build:
+      context: ./microservices
+      dockerfile: Dockerfile
+    container_name: mirai-gateway-trading
+    restart: unless-stopped
+    environment:
+      - PLATFORM_TYPE=trading
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://redis:6379/2
+    volumes:
+      - mirai_logs:/app/logs
+    networks:
+      - mirai-frontend
+      - mirai-backend
+    depends_on:
+      - redis
+    labels:
+      - "com.mirai.service=gateway"
+      - "com.mirai.platform=trading"
+
+  # ============ SERVICES PLATFORM (aimirai.info) ============
+  
+  # Services API
+  mirai-api-services:
+    build:
+      context: ./app/api
+      dockerfile: Dockerfile
+    container_name: mirai-api-services
+    restart: unless-stopped
+    environment:
+      - PYTHONPATH=/app
+      - DATABASE_URL=postgresql://mirai_services:${POSTGRES_SERVICES_PASSWORD}@postgres:5432/mirai_services_db
+      - REDIS_URL=redis://redis:6379/3
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGINS=https://aimirai.info,https://www.aimirai.info
+      - TRADING_MODE=demo
+      - PLATFORM_TYPE=services
+      - DOMAIN=aimirai.info
+    volumes:
+      - mirai_state:/app/state
+      - mirai_logs:/app/logs
+      - ./configs:/app/configs:ro
+    networks:
+      - mirai-frontend
+      - mirai-backend
+    depends_on:
+      - postgres
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    labels:
+      - "com.mirai.service=api"
+      - "com.mirai.platform=services"
+      - "com.mirai.domain=aimirai.info"
+
+  # Services Dashboard
+  mirai-dashboard-services:
+    build:
+      context: ./web/services
+      dockerfile: Dockerfile
+    container_name: mirai-dashboard-services
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=https://aimirai.info
+      - NEXT_PUBLIC_WS_URL=wss://aimirai.info/ws-services
+      - NEXT_PUBLIC_PLATFORM=services
+      - NEXT_PUBLIC_DOMAIN=aimirai.info
+      - NODE_ENV=production
+    networks:
+      - mirai-frontend
+    depends_on:
+      - mirai-api-services
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.mirai.service=dashboard"
+      - "com.mirai.platform=services"
+      - "com.mirai.domain=aimirai.info"
+
+  # AI Services Gateway
+  mirai-ai-gateway:
+    build:
+      context: ./microservices
+      dockerfile: Dockerfile
+    container_name: mirai-ai-gateway
+    restart: unless-stopped
+    environment:
+      - PLATFORM_TYPE=services
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://redis:6379/4
+      - AI_SERVICES_ENABLED=true
+    volumes:
+      - mirai_logs:/app/logs
+    networks:
+      - mirai-frontend
+      - mirai-backend
+    depends_on:
+      - redis
+    labels:
+      - "com.mirai.service=ai-gateway"
+      - "com.mirai.platform=services"
+
+  # ============ SHARED INFRASTRUCTURE ============
+  
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: mirai-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=mirai_main
+      - POSTGRES_USER=mirai_admin
+      - POSTGRES_PASSWORD=${POSTGRES_ADMIN_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./deployment/sql/init-databases.sql:/docker-entrypoint-initdb.d/01-init-databases.sql:ro
+      - ./deployment/sql/trading-schema.sql:/docker-entrypoint-initdb.d/02-trading-schema.sql:ro
+      - ./deployment/sql/services-schema.sql:/docker-entrypoint-initdb.d/03-services-schema.sql:ro
+    networks:
+      - mirai-backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mirai_admin -d mirai_main"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      - "com.mirai.service=postgres"
+      - "com.mirai.role=database"
+
+  # Redis Cache & Sessions
+  redis:
+    image: redis:7-alpine
+    container_name: mirai-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - mirai-backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      - "com.mirai.service=redis"
+      - "com.mirai.role=cache"
+
+  # Telegram Bot
+  mirai-telegram:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mirai-telegram
+    restart: unless-stopped
+    command: ["python", "-m", "app.telegram_bot.bot"]
+    environment:
+      - PYTHONPATH=/app
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - API_URL_TRADING=http://mirai-api-trading:8000
+      - API_URL_SERVICES=http://mirai-api-services:8080
+    volumes:
+      - mirai_state:/app/state
+      - mirai_logs:/app/logs
+      - ./configs:/app/configs:ro
+    networks:
+      - mirai-backend
+    depends_on:
+      - mirai-api-trading
+      - mirai-api-services
+    labels:
+      - "com.mirai.service=telegram"
+      - "com.mirai.role=notification"
+
+  # ============ MONITORING & LOGGING ============
+  
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mirai-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./deployment/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - mirai-monitoring
+      - mirai-backend
+    labels:
+      - "com.mirai.service=prometheus"
+      - "com.mirai.role=monitoring"
+
+  # Grafana Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mirai-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_DOMAIN=monitor.aimirai.online
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./deployment/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./deployment/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - mirai-monitoring
+    depends_on:
+      - prometheus
+    labels:
+      - "com.mirai.service=grafana"
+      - "com.mirai.role=monitoring"
+
+  # Log Aggregation
+  fluentd:
+    image: fluent/fluentd:v1.16-debian-1
+    container_name: mirai-fluentd
+    restart: unless-stopped
+    volumes:
+      - ./deployment/logging/fluentd.conf:/fluentd/etc/fluentd.conf:ro
+      - mirai_logs:/var/log/mirai
+    networks:
+      - mirai-backend
+    labels:
+      - "com.mirai.service=fluentd"
+      - "com.mirai.role=logging"

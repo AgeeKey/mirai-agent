@@ -1,0 +1,63 @@
+--- АНАЛИЗ ПРОИЗВОДИТЕЛЬНОСТИ ---
+Медленные запросы (>2 сек):
+87.251.78.46 - - [22/Sep/2025:01:19:11 +0200] "GET /admin/phpinfo.php HTTP/1.1" 404 196 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+87.251.78.46 - - [22/Sep/2025:01:19:11 +0200] "GET /.aws/credentials HTTP/1.1" 404 196 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+87.251.78.46 - - [22/Sep/2025:01:19:12 +0200] "GET /pinfo.php HTTP/1.1" 404 196 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+87.251.78.46 - - [22/Sep/2025:01:19:17 +0200] "GET /phpinfo2.php HTTP/1.1" 404 196 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+87.251.78.46 - - [22/Sep/2025:01:19:19 +0200] "GET /php_version.php HTTP/1.1" 404 196 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+87.251.78.46 - - [22/Sep/2025:01:19:20 +0200] "GET /version.php HTTP/1.1" 404 196 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+87.251.78.46 - - [22/Sep/2025:01:19:20 +0200] "GET /server-info.php HTTP/1.1" 404 196 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+87.251.78.46 - - [22/Sep/2025:01:19:20 +0200] "GET /env.php HTTP/1.1" 404 196 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+87.251.78.46 - - [22/Sep/2025:01:19:22 +0200] "GET /init.php HTTP/1.1" 404 196 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+5.59.231.51 - - [22/Sep/2025:01:19:33 +0200] "GET / HTTP/2.0" 502 568 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+
+Текущее использование ресурсов:
+CPU: 7.0
+Memory: 86.2%
+Disk: 10%
+Load:  0.24, 0.37, 0.73
+
+--- АНАЛИЗ БЕЗОПАСНОСТИ ---
+Неудачные попытки SSH (последние 24 часа):
+2025-09-22T02:05:41.004137+02:00 vmi2764813 sshd[248251]: Failed password for invalid user user from 62.60.131.157 port 12545 ssh2
+2025-09-22T02:05:43.224602+02:00 vmi2764813 sshd[248251]: Failed password for invalid user user from 62.60.131.157 port 12545 ssh2
+2025-09-22T02:05:45.449008+02:00 vmi2764813 sshd[248251]: Failed password for invalid user user from 62.60.131.157 port 12545 ssh2
+2025-09-22T02:05:47.808857+02:00 vmi2764813 sshd[248251]: Failed password for invalid user user from 62.60.131.157 port 12545 ssh2
+2025-09-22T02:05:50.368548+02:00 vmi2764813 sshd[248251]: Failed password for invalid user user from 62.60.131.157 port 12545 ssh2
+2025-09-22T02:06:47.615486+02:00 vmi2764813 sshd[248956]: Failed password for root from 80.94.93.176 port 16322 ssh2
+2025-09-22T02:06:50.428539+02:00 vmi2764813 sshd[248958]: Failed password for invalid user ventas01 from 45.169.200.254 port 34780 ssh2
+2025-09-22T02:06:50.823168+02:00 vmi2764813 sshd[248956]: Failed password for root from 80.94.93.176 port 16322 ssh2
+2025-09-22T02:06:52.690235+02:00 vmi2764813 sshd[248956]: Failed password for root from 80.94.93.176 port 16322 ssh2
+2025-09-22T02:06:56.877575+02:00 vmi2764813 sshd[248962]: Failed password for root from 80.94.93.176 port 37852 ssh2
+
+Подозрительные подключения:
+      7 140.82.114.21
+      2 140.82.113.21
+      2 127.0.0.1
+      2 
+      1 80.94.93.176
+      1 62.60.131.157
+      1 5.59.231.51
+      1 172.18.0.4
+      1 140.82.113.22
+      1 114.66.47.125
+
+Открытые порты:
+tcp        0      0 127.0.0.1:40961         0.0.0.0:*               LISTEN      179126/code-0f0d87f 
+tcp        0      0 0.0.0.0:8002            0.0.0.0:*               LISTEN      243664/docker-proxy 
+tcp        0      0 0.0.0.0:8001            0.0.0.0:*               LISTEN      243557/docker-proxy 
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      246385/nginx: maste 
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      1/init              
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      530/systemd-resolve 
+tcp        0      0 127.0.0.54:53           0.0.0.0:*               LISTEN      530/systemd-resolve 
+tcp6       0      0 :::8002                 :::*                    LISTEN      243671/docker-proxy 
+tcp6       0      0 :::8001                 :::*                    LISTEN      243564/docker-proxy 
+tcp6       0      0 :::22                   :::*                    LISTEN      1/init              
+
+
+--- СВОДКА АНАЛИЗА ---
+Системные ошибки: 1
+Предупреждения: 187
+Неудачные входы: 2406
+Ошибки Docker: 1
+Всего проблем: 2595

@@ -1,0 +1,93 @@
+{
+  "timestamp": "2025-09-22T09:34:58.989790",
+  "performance_score": 90,
+  "metrics": {
+    "cpu": {
+      "usage_percent": 8.5,
+      "cores": 3,
+      "frequency": 2496.25,
+      "load_average": [
+        0.61669921875,
+        0.41796875,
+        0.2294921875
+      ]
+    },
+    "memory": {
+      "total_gb": 7.755519866943359,
+      "used_gb": 3.7065696716308594,
+      "available_gb": 4.0489501953125,
+      "percent": 47.8,
+      "swap_percent": 0.0
+    },
+    "disk": {
+      "total_gb": 144.25645446777344,
+      "used_gb": 8.126579284667969,
+      "free_gb": 136.11425018310547,
+      "percent": 5.63342507941884,
+      "read_mb": 29340.35205078125,
+      "write_mb": 52862.9990234375
+    },
+    "network": {
+      "bytes_sent_mb": 3144.2796144485474,
+      "bytes_recv_mb": 6793.6950426101685,
+      "packets_sent": 3549796,
+      "packets_recv": 7378959,
+      "connections": 95
+    },
+    "apis": {
+      "Trading API": {
+        "status": "error",
+        "response_time_ms": 25.777339935302734,
+        "status_code": 404
+      },
+      "Services API": {
+        "status": "error",
+        "response_time_ms": 16.6778564453125,
+        "status_code": 404
+      },
+      "Web Interface": {
+        "status": "offline",
+        "error": "HTTPConnectionPool(host='localhost', port=3001): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x7c543b4b3260>, 'Connection to localhost timed out. (connect timeout=10)'))"
+      }
+    },
+    "databases": {
+      "sqlite": {
+        "size_mb": 0.04296875,
+        "modified": "2025-09-21T16:32:01.315521",
+        "tables": {
+          "day_state": 5,
+          "fills": 9,
+          "sqlite_sequence": 2,
+          "users": 2,
+          "blog_posts": 0,
+          "memory_entries": 0,
+          "trading_decisions": 0
+        }
+      }
+    },
+    "docker": {},
+    "autonomous_system": {
+      "recent_errors": 11,
+      "recent_warnings": 4,
+      "tasks_completed": 0,
+      "tasks_failed": 11,
+      "log_size_mb": 1.2592439651489258
+    }
+  },
+  "issues": [
+    "Web Interface недоступен",
+    "Много ошибок в автономной системе"
+  ],
+  "recommendations": [
+    "Перезапустить Web Interface",
+    "Проверить и исправить ошибки в автономной системе"
+  ],
+  "optimization_plan": [],
+  "summary": {
+    "total_issues": 2,
+    "critical_issues": 0,
+    "apis_online": 0,
+    "docker_containers": 0,
+    "system_load": 0.61669921875
+  }
+}

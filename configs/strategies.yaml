@@ -1,4 +1,4 @@
-# Trading Strategies Configuration
+# Trading Strategies Configuration with AI Integration
 
 # Global Strategy Settings
 global:
@@ -6,6 +6,19 @@ global:
   dry_run: true
   execution_interval: 300  # seconds
   max_concurrent_strategies: 3
+
+# AI Integration Settings
+ai_integration:
+  enabled: false  # Set to true to enable AI-enhanced trading
+  orchestrator_url: "http://localhost:8080"
+  decision_weight: 0.6  # Weight of AI vs traditional signals (0.0-1.0)
+  timeout: 8.0  # AI request timeout in seconds
+  health_check_interval: 30.0  # Health check interval in seconds
+  task_types:
+    - "market_analysis"
+    - "risk_assessment"
+    - "trend_prediction"
+    - "signal_validation"
 
 # Strategy Definitions
 strategies:

@@ -1,0 +1,53 @@
+brokers:
+  default: binance
+  routing:
+    BTCUSDT: binance
+    ETHUSDT: bybit
+    SOLUSDT: okx
+  credentials:
+    binance:
+      api_key: "${BINANCE_API_KEY}"
+      api_secret: "${BINANCE_API_SECRET}"
+      testnet: true
+    bybit:
+      api_key: "${BYBIT_API_KEY}"
+      api_secret: "${BYBIT_API_SECRET}"
+      testnet: true
+    okx:
+      api_key: "${OKX_API_KEY}"
+      api_secret: "${OKX_API_SECRET}"
+      passphrase: "${OKX_PASSPHRASE}"
+      testnet: true
+
+pairs:
+  crypto_top20:
+    - BTCUSDT
+    - ETHUSDT
+    - BNBUSDT
+    - SOLUSDT
+    - XRPUSDT
+    - ADAUSDT
+    - DOGEUSDT
+    - TRXUSDT
+    - TONUSDT
+    - DOTUSDT
+    - AVAXUSDT
+    - MATICUSDT
+    - LINKUSDT
+    - LTCUSDT
+    - BCHUSDT
+    - ATOMUSDT
+    - XMRUSDT
+    - ETCUSDT
+    - FILUSDT
+    - XLMUSDT
+  forex_majors:
+    - EURUSD
+    - GBPUSD
+    - USDJPY
+    - AUDUSD
+    - USDCAD
+  commodities:
+    - XAUUSD   # Gold
+    - XTIUSD   # WTI Crude Oil
+

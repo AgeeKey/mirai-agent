@@ -1,0 +1,187 @@
+# Mirai Agent Alert Rules
+groups:
+  - name: trading_alerts
+    rules:
+      # Критическая просадка
+      - alert: CriticalDrawdown
+        expr: mirai_drawdown_current_percent > 10
+        for: 1m
+        labels:
+          severity: critical
+          component: trading
+        annotations:
+          summary: "🚨 КРИТИЧЕСКАЯ ПРОСАДКА: {{ $value }}%"
+          description: "Текущая просадка составляет {{ $value }}%, что превышает критический порог в 10%"
+          
+      # Большая просадка
+      - alert: HighDrawdown
+        expr: mirai_drawdown_current_percent > 5
+        for: 2m
+        labels:
+          severity: warning
+          component: trading
+        annotations:
+          summary: "⚠️ Высокая просадка: {{ $value }}%"
+          description: "Текущая просадка составляет {{ $value }}%, рекомендуется мониторинг"
+          
+      # Низкий винрейт
+      - alert: LowWinRate
+        expr: mirai_win_rate_percent < 45
+        for: 5m
+        labels:
+          severity: warning
+          component: trading
+        annotations:
+          summary: "📉 Низкий винрейт: {{ $value }}%"
+          description: "Винрейт упал до {{ $value }}%, возможна проблема со стратегией"
+          
+      # Отсутствие торговли
+      - alert: NoTradingActivity
+        expr: increase(mirai_trades_total[1h]) == 0
+        for: 2h
+        labels:
+          severity: warning
+          component: trading
+        annotations:
+          summary: "🔇 Отсутствие торговой активности"
+          description: "Не было сделок более 2 часов"
+          
+      # Слишком много активных позиций
+      - alert: TooManyPositions
+        expr: mirai_positions_active > 10
+        for: 1m
+        labels:
+          severity: warning
+          component: risk
+        annotations:
+          summary: "📊 Слишком много позиций: {{ $value }}"
+          description: "Количество активных позиций ({{ $value }}) превышает рекомендуемый лимит"
+
+  - name: ai_alerts
+    rules:
+      # AI не отвечает
+      - alert: AINotResponding
+        expr: up{job="mirai-ai-orchestrator"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: ai
+        annotations:
+          summary: "🤖 AI Orchestrator недоступен"
+          description: "AI Orchestrator не отвечает более 1 минуты"
+          
+      # Низкая уверенность AI
+      - alert: LowAIConfidence
+        expr: mirai_ai_confidence_score < 30
+        for: 5m
+        labels:
+          severity: warning
+          component: ai
+        annotations:
+          summary: "🧠 Низкая уверенность AI: {{ $value }}%"
+          description: "Уверенность AI составляет только {{ $value }}%"
+          
+      # Медленные ответы AI
+      - alert: SlowAIResponse
+        expr: histogram_quantile(0.95, mirai_ai_response_time_seconds) > 10
+        for: 2m
+        labels:
+          severity: warning
+          component: ai
+        annotations:
+          summary: "🐌 Медленные ответы AI"
+          description: "95% ответов AI занимают более 10 секунд"
+
+  - name: system_alerts
+    rules:
+      # Высокое использование CPU
+      - alert: HighCPUUsage
+        expr: mirai_system_cpu_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "💻 Высокое использование CPU: {{ $value }}%"
+          description: "Использование CPU составляет {{ $value }}%"
+          
+      # Высокое использование памяти
+      - alert: HighMemoryUsage
+        expr: mirai_system_memory_percent > 85
+        for: 3m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "🧠 Высокое использование памяти: {{ $value }}%"
+          description: "Использование памяти составляет {{ $value }}%"
+          
+      # Заканчивается место на диске
+      - alert: LowDiskSpace
+        expr: mirai_system_disk_percent > 90
+        for: 1m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "💾 Заканчивается место на диске: {{ $value }}%"
+          description: "Использование диска составляет {{ $value }}%"
+          
+      # API недоступен
+      - alert: APIDown
+        expr: up{job="mirai-trading-api"} == 0 or up{job="mirai-web-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "🌐 API недоступен"
+          description: "Один из API сервисов недоступен"
+          
+      # Высокое время ответа API
+      - alert: HighAPIResponseTime
+        expr: histogram_quantile(0.95, mirai_api_response_time_seconds) > 5
+        for: 2m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "🐌 Медленные ответы API"
+          description: "95% ответов API занимают более 5 секунд"
+
+  - name: emergency_alerts
+    rules:
+      # Экстренная остановка
+      - alert: EmergencyStopActivated
+        expr: increase(mirai_emergency_stops_total[5m]) > 0
+        for: 0s
+        labels:
+          severity: critical
+          component: emergency
+        annotations:
+          summary: "🚨 ЭКСТРЕННАЯ ОСТАНОВКА АКТИВИРОВАНА"
+          description: "Была активирована экстренная остановка торговли"
+          
+      # Система долго работает без перезагрузки
+      - alert: LongUptime
+        expr: mirai_system_uptime_seconds > 604800  # 7 дней
+        for: 1h
+        labels:
+          severity: info
+          component: system
+        annotations:
+          summary: "⏰ Система работает более 7 дней"
+          description: "Система работает {{ $value | humanizeDuration }}, рекомендуется перезагрузка"
+
+  - name: market_alerts
+    rules:
+      # Высокая волатильность
+      - alert: HighMarketVolatility
+        expr: mirai_market_volatility > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          component: market
+        annotations:
+          summary: "📈 Высокая волатильность рынка"
+          description: "Волатильность рынка составляет {{ $value }}, будьте осторожны"

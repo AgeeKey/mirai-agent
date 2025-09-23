@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mirai-api
+  labels:
+    app: mirai-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mirai-api
+  template:
+    metadata:
+      labels:
+        app: mirai-api
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/your-org/mirai-api:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: mirai-secrets
+                  key: telegram_bot_token
+            - name: TELEGRAM_CHAT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: mirai-secrets
+                  key: telegram_chat_id
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mirai-api
+spec:
+  type: ClusterIP
+  selector:
+    app: mirai-api
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+

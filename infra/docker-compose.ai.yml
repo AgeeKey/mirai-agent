@@ -1,0 +1,239 @@
+# ИСПРАВЛЕННЫЙ Docker Compose для AI сервисов Mirai
+# Включает PostgreSQL и Redis для SuperAGI, правильные volumes
+version: "3.8"
+
+networks:
+  mirai-ai-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  chromadb_data:
+    driver: local
+
+services:
+  # PostgreSQL для SuperAGI
+  postgres-ai:
+    image: postgres:15-alpine
+    container_name: mirai-postgres-ai
+    environment:
+      POSTGRES_DB: superagi_db
+      POSTGRES_USER: mirai
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mirai123}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/pgdata
+    ports:
+      - "5433:5432"  # Используем 5433 чтобы не конфликтовать с основной БД
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mirai -d superagi_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mirai-ai-network
+    restart: unless-stopped
+
+  # Redis для SuperAGI
+  redis-ai:
+    image: redis:7-alpine
+    container_name: mirai-redis-ai
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6380:6379"  # Используем 6380 чтобы не конфликтовать
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mirai-ai-network
+    restart: unless-stopped
+
+  # ChromaDB для векторной памяти
+  chromadb:
+    image: chromadb/chroma:0.4.15
+    container_name: mirai-chromadb
+    environment:
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+      - ANONYMIZED_TELEMETRY=FALSE
+      - CHROMA_SERVER_AUTH_CREDENTIALS_PROVIDER=chromadb.auth.token.TokenAuthCredentialsProvider
+      - CHROMA_SERVER_AUTH_CREDENTIALS=${CHROMA_TOKEN:-mirai-secret-token}
+      - CHROMA_SERVER_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
+    volumes:
+      - chromadb_data:/chroma/chroma
+      - ../shared/data:/shared/data:rw
+      - ../shared/knowledge:/shared/knowledge:rw
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - mirai-ai-network
+    restart: unless-stopped
+
+  # SuperAGI - оркестрация агентов  
+  superagi:
+    build: 
+      context: ../microservices/ai-engine/superagi
+      dockerfile: Dockerfile
+    container_name: mirai-superagi
+    environment:
+      - ENV=prod
+      - DATABASE_URL=postgresql://mirai:${POSTGRES_PASSWORD:-mirai123}@postgres-ai:5432/superagi_db
+      - REDIS_URL=redis://redis-ai:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - PINECONE_API_KEY=${PINECONE_API_KEY:-}
+      - SERP_API_KEY=${SERP_API_KEY:-}
+      # Настройки для работы с нашими данными
+      - SUPERAGI_DATA_DIR=/app/shared/data
+      - SUPERAGI_KNOWLEDGE_DIR=/app/shared/knowledge
+      - SUPERAGI_REPORTS_DIR=/app/shared/reports
+    volumes:
+      # Монтируем shared директории для обмена данными
+      - ../shared:/app/shared:rw
+      - ../microservices/ai-engine/superagi/workspace:/app/workspace:rw
+      # Логи
+      - ../logs:/app/logs:rw
+    ports:
+      - "8085:3000"  # SuperAGI GUI
+    depends_on:
+      postgres-ai:
+        condition: service_healthy
+      redis-ai:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - mirai-ai-network
+    restart: unless-stopped
+
+  # AutoGPT Runner - исполнительный агент
+  autogpt-runner:
+    build: 
+      context: ../microservices/ai-engine/autogpt-runner
+      dockerfile: Dockerfile
+    container_name: mirai-autogpt-runner
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      # Memory настройки
+      - MEMORY_BACKEND=chroma
+      - MEMORY_INDEX=mirai-autogpt
+      - CHROMADB_HOST=chromadb
+      - CHROMADB_PORT=8000
+      - CHROMADB_TOKEN=${CHROMA_TOKEN:-mirai-secret-token}
+      # Workspace настройки
+      - WORKSPACE_BACKEND=local
+      - WORKSPACE_STORAGE_BUCKET=mirai-workspace
+      # Настройки безопасности
+      - RESTRICT_TO_WORKSPACE=true
+      - ALLOW_DOWNLOADS=false
+    volumes:
+      # Монтируем те же shared директории
+      - ../shared:/workspace/shared:rw
+      - ../microservices/ai-engine/autogpt-runner/workspace:/workspace/autogpt:rw
+      # Логи
+      - ../logs:/workspace/logs:rw
+    ports:
+      - "8090:8090"   # HTTP API для Auto-GPT
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - mirai-ai-network
+    restart: unless-stopped
+
+  # Orchestrator - наш координатор между AI и Mirai
+  orchestrator:
+    build: 
+      context: ../microservices/ai-engine/orchestrator
+      dockerfile: Dockerfile
+    container_name: mirai-orchestrator
+    environment:
+      # URLs сервисов
+      - SUPERAGI_URL=http://superagi:3000
+      - AUTOGPT_URL=http://autogpt-runner:8090
+      - CHROMADB_URL=http://chromadb:8000
+      # URLs основных сервисов Mirai (через host network или external)
+      - API_URL=http://host.docker.internal:8001
+      - TRADER_URL=http://host.docker.internal:8002
+      - TELEGRAM_URL=http://host.docker.internal:8003
+      # Настройки
+      - AI_ENABLED=true
+      - LOG_LEVEL=INFO
+      - TASK_TIMEOUT=300
+      - MAX_CONCURRENT_TASKS=5
+    volumes:
+      # Общие данные
+      - ../shared:/shared:rw
+      # Конфигурации
+      - ../configs:/app/configs:ro
+      # Логи
+      - ../logs:/app/logs:rw
+    ports:
+      - "8080:8080"
+    depends_on:
+      superagi:
+        condition: service_healthy
+      autogpt-runner:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - mirai-ai-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Для доступа к основным сервисам
+    restart: unless-stopped
+
+  # AI Dashboard - веб-интерфейс для мониторинга AI
+  ai-dashboard:
+    build:
+      context: ../microservices/ai-engine/dashboard
+      dockerfile: Dockerfile
+    container_name: mirai-ai-dashboard
+    environment:
+      - ORCHESTRATOR_URL=http://orchestrator:8080
+      - SUPERAGI_URL=http://superagi:3000
+      - CHROMADB_URL=http://chromadb:8000
+    volumes:
+      - ../shared:/app/shared:ro
+      - ../logs:/app/logs:ro
+    ports:
+      - "8088:8088"
+    depends_on:
+      orchestrator:
+        condition: service_healthy
+    networks:
+      - mirai-ai-network
+    restart: unless-stopped

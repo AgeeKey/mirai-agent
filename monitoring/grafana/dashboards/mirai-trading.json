@@ -1,0 +1,51 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Mirai Trading Dashboard",
+    "tags": ["mirai", "trading"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Total PnL",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "mirai_trading_pnl_total",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Active Positions",
+        "type": "stat", 
+        "targets": [
+          {
+            "expr": "mirai_trading_positions_active",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Trading Volume",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(mirai_trading_volume_total[5m])",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "10s"
+  }
+}

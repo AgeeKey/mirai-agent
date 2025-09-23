@@ -1,0 +1,16 @@
+{
+    "timestamp": "2025-09-22T02:07:12+02:00",
+    "analysis_period": "1 hour",
+    "summary": {
+        "system_errors": 1,
+        "system_warnings": 187,
+        "failed_logins": 2406,
+        "docker_errors": 1,
+        "total_issues": 2595
+    },
+    "recommendations": [
+        "Множественные неудачные попытки входа - проверить безопасность"
+,
+        "Ошибки в Docker контейнерах - требуется диагностика"
+    ]
+}

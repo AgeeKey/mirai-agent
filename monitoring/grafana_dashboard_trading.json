@@ -1,0 +1,333 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Mirai Agent - Trading Dashboard",
+    "tags": ["mirai", "trading", "ai"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "P&L Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "mirai_pnl_total_usd",
+            "legendFormat": "Total P&L"
+          },
+          {
+            "expr": "mirai_pnl_daily_usd",
+            "legendFormat": "Daily P&L"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 100
+                }
+              ]
+            },
+            "unit": "currencyUSD"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Win Rate & Drawdown",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "mirai_win_rate_percent",
+            "legendFormat": "Win Rate"
+          },
+          {
+            "expr": "mirai_drawdown_current_percent",
+            "legendFormat": "Current Drawdown"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 50
+                },
+                {
+                  "color": "green",
+                  "value": 70
+                }
+              ]
+            },
+            "unit": "percent"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "P&L Trend (24h)",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "mirai_pnl_total_usd",
+            "legendFormat": "Total P&L"
+          },
+          {
+            "expr": "mirai_pnl_daily_usd",
+            "legendFormat": "Daily P&L"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "currencyUSD"
+          }
+        },
+        "gridPos": {
+          "h": 9,
+          "w": 24,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Active Positions",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "mirai_positions_active",
+            "legendFormat": "Active Positions"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 5
+                },
+                {
+                  "color": "red",
+                  "value": 10
+                }
+              ]
+            },
+            "max": 15,
+            "min": 0
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 0,
+          "y": 17
+        }
+      },
+      {
+        "id": 5,
+        "title": "AI Confidence",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "mirai_ai_confidence_score",
+            "legendFormat": "AI Confidence"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 50
+                },
+                {
+                  "color": "green",
+                  "value": 80
+                }
+              ]
+            },
+            "max": 100,
+            "min": 0,
+            "unit": "percent"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 8,
+          "y": 17
+        }
+      },
+      {
+        "id": 6,
+        "title": "System Health",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "mirai_system_cpu_percent",
+            "legendFormat": "CPU Usage"
+          },
+          {
+            "expr": "mirai_system_memory_percent",
+            "legendFormat": "Memory Usage"
+          },
+          {
+            "expr": "mirai_system_disk_percent",
+            "legendFormat": "Disk Usage"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 70
+                },
+                {
+                  "color": "red",
+                  "value": 85
+                }
+              ]
+            },
+            "unit": "percent"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 16,
+          "y": 17
+        }
+      },
+      {
+        "id": 7,
+        "title": "Trading Activity",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(mirai_trades_total[5m]) * 60",
+            "legendFormat": "Trades per minute"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 25
+        }
+      },
+      {
+        "id": 8,
+        "title": "API Response Times",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, mirai_api_response_time_seconds)",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.50, mirai_api_response_time_seconds)",
+            "legendFormat": "50th percentile"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "s"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 25
+        }
+      }
+    ],
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "timepicker": {},
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": []
+    },
+    "refresh": "30s",
+    "schemaVersion": 30,
+    "version": 1,
+    "links": []
+  }
+}

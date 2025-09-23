@@ -1,0 +1,62 @@
+{
+  "timestamp": "2025-09-23T11:34:32.879360",
+  "uptime_hours": 23.168940920833336,
+  "total_experiences": 139,
+  "predictions_made": 0,
+  "models_active": 1,
+  "model_statistics": {
+    "price_prediction": {
+      "status": "not_trained"
+    },
+    "signal_classification": {
+      "status": "not_trained"
+    },
+    "content_quality": {
+      "status": "not_trained"
+    },
+    "market_sentiment": {
+      "training_samples": 139,
+      "latest_r2": 0.9997365726344316,
+      "latest_mse": 7.659034427223205e-06,
+      "last_trained": "2025-09-23T08:54:31.719726",
+      "performance_trend": "stable"
+    },
+    "risk_assessment": {
+      "status": "not_trained"
+    },
+    "portfolio_optimization": {
+      "status": "not_trained"
+    }
+  },
+  "experience_statistics": {
+    "prediction": {
+      "count": 28,
+      "avg_reward": 0.5542284873281014,
+      "success_rate": 1.0
+    },
+    "trading": {
+      "count": 42,
+      "avg_reward": 0.6333387919959302,
+      "success_rate": 1.0
+    },
+    "content": {
+      "count": 35,
+      "avg_reward": 0.5776782138242101,
+      "success_rate": 1.0
+    },
+    "risk": {
+      "count": 34,
+      "avg_reward": 0.5532711152260628,
+      "success_rate": 1.0
+    }
+  },
+  "learning_config": {
+    "auto_retrain": true,
+    "experience_batch_size": 100,
+    "min_samples_for_training": 50,
+    "performance_threshold": 0.7,
+    "learning_rate_decay": 0.95,
+    "exploration_rate": 0.1
+  },
+  "system_health": "poor"
+}

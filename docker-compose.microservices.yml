@@ -9,45 +9,98 @@ services:
   redis:
     image: redis:7-alpine
     container_name: mirai-redis
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server --requirepass ${REDIS_PASSWORD:-miraipass}
     environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-miraipass}
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     networks:
       - mirai-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Web Panel (main interface)
-  web-panel:
+  # Advanced AI Engine
+  ai-engine:
     build:
-      context: .
-      dockerfile: Dockerfile.web
-    container_name: mirai-web-panel
+      context: ./microservices
+      dockerfile: Dockerfile
+    container_name: mirai-ai-engine
+    command: ["python", "-m", "uvicorn", "ai_engine:app", "--host", "0.0.0.0", "--port", "8001"]
     ports:
-      - "8080:8000"
-      - "8888:8000"
+      - "8001:8001"
     environment:
       - ENVIRONMENT=production
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-miraipass}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - HF_TOKEN=${HF_TOKEN}
     depends_on:
       - redis
     networks:
       - mirai-network
     restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+      - ./reports:/app/reports
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Microservices
-  data-collector:
+  # Advanced Portfolio Manager
+  portfolio-manager:
     build:
       context: ./microservices
       dockerfile: Dockerfile
-    container_name: mirai-data-collector
-    command: ["uvicorn", "data_collector:app", "--host", "0.0.0.0", "--port", "8001"]
+    container_name: mirai-portfolio-manager
+    command: ["python", "-m", "uvicorn", "portfolio_manager:app", "--host", "0.0.0.0", "--port", "8002"]
     ports:
-      - "8001:8001"
+      - "8002:8002"
     environment:
       - ENVIRONMENT=production
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-miraipass}
+    depends_on:
+      - redis
+      - ai-engine
+    networks:
+      - mirai-network
+    restart: unless-stopped
+    volumes:
+      - ./state:/app/state
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Advanced Analytics Engine
+  analytics:
+    build:
+      context: ./microservices
+      dockerfile: Dockerfile
+    container_name: mirai-analytics
+    command: ["python", "-m", "uvicorn", "analytics:app", "--host", "0.0.0.0", "--port", "8003"]
+    ports:
+      - "8003:8003"
+    environment:
+      - ENVIRONMENT=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-miraipass}
+    depends_on:
+      - redis
+      - ai-engine
     depends_on:
       - redis
     networks:

@@ -15,11 +15,17 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Install curl for health checks first
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user early
+RUN useradd -m -u 1001 mirai
+
+# Copy application code with correct ownership
+COPY --chown=mirai:mirai . .
 
 # Create logs and state directories
-RUN mkdir -p logs state
+RUN mkdir -p logs state && chown -R mirai:mirai logs state
 
 # Expose port
 EXPOSE 8000
@@ -28,13 +34,7 @@ EXPOSE 8000
 ENV PYTHONPATH=/app
 ENV WEB_PORT=8000
 
-# Create non-root user for security
-RUN useradd -m -u 1001 mirai && \
-    chown -R mirai:mirai /app
 USER mirai
-
-# Install curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \

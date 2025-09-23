@@ -1,0 +1,15 @@
+[Unit]
+Description=Mirai Trading Agent
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/root/mirai-agent
+ExecStart=/usr/bin/docker-compose -f docker-compose.yml -f monitoring/docker-compose.monitoring.yml up -d
+ExecStop=/usr/bin/docker-compose -f docker-compose.yml -f monitoring/docker-compose.monitoring.yml down
+User=root
+
+[Install]
+WantedBy=multi-user.target

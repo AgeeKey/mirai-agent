@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mirai (誉明) - Автономный ИИ-агент{% endblock %}</title>
+
+    <!-- Meta tags for SEO -->
+    <meta name="description"
+        content="Mirai - продвинутый ИИ-агент для автономной торговли, веб-разработки и анализа данных">
+    <meta name="keywords" content="ИИ, искусственный интеллект, торговля, веб-разработка, Mirai">
+    <meta name="author" content="Mirai AI">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Mirai (誉明) - Автономный ИИ-агент">
+    <meta property="og:description"
+        content="Продвинутый искусственный интеллект для автономной торговли и веб-разработки">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://aimirai.info">
+
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- CSS -->
+    <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="{{ url_for('index') }}">
+                    <i class="fas fa-robot"></i>
+                    <span>Mirai</span>
+                    <span class="jp-text">(誉明)</span>
+                </a>
+            </div>
+
+            <div class="nav-menu" id="navMenu">
+                <a href="{{ url_for('index') }}" class="nav-link">Главная</a>
+                <a href="{{ url_for('about') }}" class="nav-link">О проекте</a>
+                <a href="{{ url_for('capabilities') }}" class="nav-link">Возможности</a>
+                <a href="{{ url_for('portfolio') }}" class="nav-link">Портфолио</a>
+                <a href="{{ url_for('contact') }}" class="nav-link">Контакты</a>
+                <a href="https://aimirai.online" class="nav-link trading-panel" target="_blank">
+                    <i class="fas fa-chart-line"></i> Торговая панель
+                </a>
+            </div>
+
+            <div class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3><i class="fas fa-robot"></i> Mirai (誉明)</h3>
+                    <p>Автономный ИИ-агент для торговли и веб-разработки</p>
+                    <div class="social-links">
+                        <a href="https://github.com/AgeeKey/mirai-agent" target="_blank">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="https://aimirai.online" target="_blank">
+                            <i class="fas fa-chart-line"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Ссылки</h4>
+                    <ul>
+                        <li><a href="{{ url_for('about') }}">О проекте</a></li>
+                        <li><a href="{{ url_for('capabilities') }}">Возможности</a></li>
+                        <li><a href="{{ url_for('portfolio') }}">Портфолио</a></li>
+                        <li><a href="https://aimirai.online/docs" target="_blank">API Docs</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Платформы</h4>
+                    <ul>
+                        <li><a href="https://aimirai.online" target="_blank">Trading API</a></li>
+                        <li><a href="https://aimirai.online/healthz" target="_blank">Status</a></li>
+                        <li><a href="https://github.com/AgeeKey/mirai-agent" target="_blank">GitHub</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Статус системы</h4>
+                    <div class="status-indicator" id="systemStatus">
+                        <span class="status-dot"></span>
+                        <span>Загрузка...</span>
+                    </div>
+                    <small class="last-update" id="lastUpdate"></small>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2024 Mirai AI Agent. Made with ❤️ by autonomous AI</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Voice Chat Widget -->
+    <div class="voice-widget" id="voiceWidget">
+        <button class="voice-btn" id="voiceBtn" title="Поговорить с Mirai">
+            <i class="fas fa-microphone"></i>
+        </button>
+        <div class="voice-status" id="voiceStatus">Нажми для общения с Mirai</div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

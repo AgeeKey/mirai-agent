@@ -1,0 +1,72 @@
+version: '3.8'
+
+networks:
+  mirai-demo:
+    driver: bridge
+
+volumes:
+  demo_postgres_data:
+  demo_redis_data:
+
+services:
+  # Trading Platform (aimirai.online simulation)
+  mirai-trading:
+    build:
+      context: ./microservices
+      dockerfile: Dockerfile
+    container_name: mirai-demo-trading
+    ports:
+      - "8000:8000"
+    environment:
+      - PLATFORM_TYPE=trading
+      - JWT_SECRET=demo_jwt_secret_key_for_testing_only
+    networks:
+      - mirai-demo
+    command: ["python", "-m", "uvicorn", "gateway:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  # Services Platform (aimirai.info simulation)  
+  mirai-services:
+    build:
+      context: ./microservices
+      dockerfile: Dockerfile
+    container_name: mirai-demo-services
+    ports:
+      - "8001:8001"
+    environment:
+      - PLATFORM_TYPE=services
+      - JWT_SECRET=demo_jwt_secret_key_for_testing_only
+    networks:
+      - mirai-demo
+    command: ["python", "-m", "uvicorn", "gateway:app", "--host", "0.0.0.0", "--port", "8001"]
+
+  # AI Engine
+  mirai-ai:
+    build:
+      context: ./microservices
+      dockerfile: Dockerfile
+    container_name: mirai-demo-ai
+    ports:
+      - "8010:8010"
+    networks:
+      - mirai-demo
+    command: ["python", "-m", "uvicorn", "ai_simple:app", "--host", "0.0.0.0", "--port", "8010"]
+
+  # Portfolio Manager
+  mirai-portfolio:
+    build:
+      context: ./microservices
+      dockerfile: Dockerfile
+    container_name: mirai-demo-portfolio
+    ports:
+      - "8011:8011"
+    networks:
+      - mirai-demo
+    command: ["python", "-m", "uvicorn", "portfolio_simple:app", "--host", "0.0.0.0", "--port", "8011"]
+
+  # Redis for demo
+  redis-demo:
+    image: redis:7-alpine
+    container_name: mirai-demo-redis
+    networks:
+      - mirai-demo
+    command: redis-server --appendonly yes

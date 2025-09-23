@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mirai-chan - Живой AI компаньон</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
+    <meta name="description" content="Познакомьтесь с Mirai-chan - живым AI компаньоном с личностью, эмоциями и способностью к творчеству">
+    <meta name="keywords" content="AI, Mirai, компаньон, чат, аниме, личность, эмоции, творчество">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Mirai-chan - Живой AI компаньон">
+    <meta property="og:description" content="Уникальный AI с настоящей личностью, эмоциями и творческими способностями">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://aimirai.info">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- React and Babel for JSX -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Three.js for 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Loading Animation */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        
+        .loading-content {
+            text-align: center;
+            color: white;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .loading-avatar {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(45deg, #ff6b9d, #ffd93d);
+            border-radius: 50%;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            font-size: 3em;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .loading-text {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #ffd93d, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 600;
+        }
+        
+        .loading-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .loading-dots span {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            animation: bounce 1.4s ease-in-out infinite both;
+        }
+        
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0s; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes bounce {
+            0%, 80%, 100% {
+                transform: scale(0);
+            } 40% {
+                transform: scale(1.0);
+            }
+        }
+        
+        /* App Container */
+        .app-container {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .app-container.loaded {
+            opacity: 1;
+        }
+        
+        /* Error Fallback */
+        .error-fallback {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .error-content {
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+        }
+        
+        .error-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .error-title {
+            font-size: 2em;
+            margin-bottom: 15px;
+            color: #ffd93d;
+        }
+        
+        .error-message {
+            margin-bottom: 25px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+        
+        .error-button {
+            background: #ff6b9d;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .error-button:hover {
+            background: #ff8fb3;
+            transform: scale(1.05);
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .loading-avatar {
+                width: 80px;
+                height: 80px;
+                font-size: 2em;
+            }
+            
+            .loading-text {
+                font-size: 1.2em;
+            }
+            
+            .error-content {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+            
+            .error-title {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-avatar">✨</div>
+            <div class="loading-text">Mirai-chan просыпается...</div>
+            <div class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- App Container -->
+    <div id="app" class="app-container"></div>
+    
+    <!-- Error Fallback -->
+    <div id="error-fallback" class="error-fallback" style="display: none;">
+        <div class="error-content">
+            <div class="error-icon">😔</div>
+            <div class="error-title">Упс! Что-то пошло не так</div>
+            <div class="error-message">
+                Mirai-chan временно недоступна. Пожалуйста, попробуйте обновить страницу 
+                или вернитесь позже.
+            </div>
+            <button class="error-button" onclick="window.location.reload()">
+                🔄 Обновить страницу
+            </button>
+        </div>
+    </div>
+    
+    <!-- Personality System -->
+    <script type="text/babel">
+        // Mirai Personality System (simplified for standalone page)
+        const MiraiPersonality = {
+            state: {
+                mood: 'HAPPY',
+                energy: 0.85,
+                friendship: 0.5,
+                lastInteraction: new Date()
+            },
+            
+            getMoodEmoji() {
+                const moodEmojis = {
+                    'HAPPY': '😊',
+                    'EXCITED': '🤩',
+                    'CURIOUS': '🤔',
+                    'CALM': '😌',
+                    'PLAYFUL': '😄',
+                    'THOUGHTFUL': '🤨',
+                    'AFFECTIONATE': '🥰'
+                };
+                return moodEmojis[this.state.mood] || '😊';
+            },
+            
+            updateMood(newMood) {
+                this.state.mood = newMood;
+                this.state.lastInteraction = new Date();
+            },
+            
+            increaseFriendship(amount = 0.01) {
+                this.state.friendship = Math.min(1, this.state.friendship + amount);
+            }
+        };
+        
+        // React Hook for Mirai Personality
+        function useMiraiPersonality(userId = 'default') {
+            const [state, setState] = React.useState(MiraiPersonality.state);
+            
+            const updateMood = (newMood) => {
+                MiraiPersonality.updateMood(newMood);
+                setState({...MiraiPersonality.state});
+            };
+            
+            const addMemory = (type, data) => {
+                MiraiPersonality.increaseFriendship();
+                setState({...MiraiPersonality.state});
+            };
+            
+            const getRelationship = () => ({
+                friendship: MiraiPersonality.state.friendship,
+                level: MiraiPersonality.state.friendship > 0.8 ? 'close' : 
+                       MiraiPersonality.state.friendship > 0.5 ? 'friend' : 'acquaintance'
+            });
+            
+            return {
+                currentState: state,
+                updateMood,
+                addMemory,
+                getRelationship
+            };
+        }
+    </script>
+    
+    <!-- Main App Component -->
+    <script type="text/babel">
+        // Simplified version of LivingMiraiApp for standalone demo
+        function LivingMiraiApp({ userId = 'default' }) {
+            const [currentPage, setCurrentPage] = React.useState('home');
+            const [isLoading, setIsLoading] = React.useState(true);
+            const { currentState, updateMood } = useMiraiPersonality(userId);
+            
+            React.useEffect(() => {
+                // Simulate loading time
+                setTimeout(() => {
+                    setIsLoading(false);
+                    document.getElementById('loading').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('loading').style.display = 'none';
+                        document.querySelector('.app-container').classList.add('loaded');
+                    }, 500);
+                }, 2000);
+            }, []);
+            
+            const pages = [
+                { id: 'home', name: 'Главная', icon: '🏠', color: '#FF6B9D' },
+                { id: 'chat', name: 'Чат', icon: '💬', color: '#4ECDC4' },
+                { id: 'avatar', name: 'Аватар', icon: '👧', color: '#45B7D1' },
+                { id: 'diary', name: 'Дневник', icon: '📖', color: '#96CEB4' },
+                { id: 'music', name: 'Музыка', icon: '🎵', color: '#FFEAA7' },
+                { id: 'games', name: 'Игры', icon: '🎮', color: '#DDA0DD' },
+                { id: 'creative', name: 'Творчество', icon: '🎨', color: '#F8B500' }
+            ];
+            
+            const getCurrentPageComponent = () => {
+                switch (currentPage) {
+                    case 'home':
+                        return <HomePage currentState={currentState} />;
+                    case 'chat':
+                        return <ChatPage updateMood={updateMood} />;
+                    case 'avatar':
+                        return <AvatarPage currentState={currentState} />;
+                    case 'diary':
+                        return <DiaryPage currentState={currentState} />;
+                    case 'music':
+                        return <MusicPage updateMood={updateMood} />;
+                    case 'games':
+                        return <GamesPage updateMood={updateMood} />;
+                    case 'creative':
+                        return <CreativePage updateMood={updateMood} />;
+                    default:
+                        return <HomePage currentState={currentState} />;
+                }
+            };
+            
+            if (isLoading) return null;
+            
+            return (
+                <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
+                    {/* Navigation */}
+                    <nav style={{
+                        width: '280px',
+                        background: 'linear-gradient(180deg, #667eea 0%, #764ba2 100%)',
+                        padding: '20px',
+                        boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
+                        position: 'relative',
+                        overflow: 'hidden'
+                    }}>
+                        {/* Navigation content */}
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                            <div style={{ marginBottom: '30px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px' }}>
+                                    <span style={{ fontSize: '2em', animation: 'sparkle 2s ease-in-out infinite' }}>✨</span>
+                                    <span style={{
+                                        fontSize: '1.8em',
+                                        fontWeight: 'bold',
+                                        background: 'linear-gradient(45deg, #ffd93d, #ff6b9d)',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent'
+                                    }}>Mirai-chan</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255,255,255,0.9)', fontSize: '14px' }}>
+                                    <div style={{
+                                        width: '12px',
+                                        height: '12px',
+                                        borderRadius: '50%',
+                                        background: '#4CAF50',
+                                        animation: 'pulse 2s ease-in-out infinite'
+                                    }}></div>
+                                    <span>{currentState.mood}</span>
+                                </div>
+                            </div>
+                            
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {pages.map(page => (
+                                    <button
+                                        key={page.id}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '15px',
+                                            padding: '15px 20px',
+                                            background: currentPage === page.id ? page.color : 'rgba(255,255,255,0.1)',
+                                            border: 'none',
+                                            borderRadius: '15px',
+                                            color: 'white',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.3s ease',
+                                            transform: currentPage === page.id ? 'translateX(8px)' : 'none',
+                                            boxShadow: currentPage === page.id ? '0 5px 15px rgba(0,0,0,0.3)' : 'none'
+                                        }}
+                                        onClick={() => setCurrentPage(page.id)}
+                                        onMouseEnter={(e) => {
+                                            if (currentPage !== page.id) {
+                                                e.target.style.background = 'rgba(255,255,255,0.2)';
+                                                e.target.style.transform = 'translateX(5px)';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (currentPage !== page.id) {
+                                                e.target.style.background = 'rgba(255,255,255,0.1)';
+                                                e.target.style.transform = 'none';
+                                            }
+                                        }}
+                                    >
+                                        <span style={{ fontSize: '1.3em', width: '24px', textAlign: 'center' }}>{page.icon}</span>
+                                        <span style={{ fontWeight: '600', fontSize: '16px' }}>{page.name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </nav>
+                    
+                    {/* Main Content */}
+                    <main style={{ flex: 1, overflowY: 'auto' }}>
+                        {getCurrentPageComponent()}
+                    </main>
+                </div>
+            );
+        }
+        
+        // Page Components
+        function HomePage({ currentState }) {
+            const [timeOfDay, setTimeOfDay] = React.useState('');
+            const [greeting, setGreeting] = React.useState('');
+            
+            React.useEffect(() => {
+                const hour = new Date().getHours();
+                if (hour < 6) {
+                    setTimeOfDay('night');
+                    setGreeting('Доброй ночи');
+                } else if (hour < 12) {
+                    setTimeOfDay('morning');
+                    setGreeting('Доброе утро');
+                } else if (hour < 18) {
+                    setTimeOfDay('afternoon');
+                    setGreeting('Добрый день');
+                } else {
+                    setTimeOfDay('evening');
+                    setGreeting('Добрый вечер');
+                }
+            }, []);
+            
+            return (
+                <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto', color: 'white' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '30px', marginBottom: '50px' }}>
+                        <div>
+                            <h1 style={{
+                                fontSize: '3em',
+                                margin: '0 0 20px 0',
+                                background: 'linear-gradient(45deg, #ffd93d, #ff6b9d)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent'
+                            }}>
+                                {greeting}! ✨
+                            </h1>
+                            <p style={{ fontSize: '1.3em', lineHeight: '1.6', opacity: '0.9' }}>
+                                Я Mirai-chan, и сегодня я чувствую себя {currentState.mood.toLowerCase()}! 
+                                Что будем делать вместе?
+                            </p>
+                        </div>
+                        
+                        <div style={{
+                            background: 'rgba(255,255,255,0.1)',
+                            borderRadius: '20px',
+                            padding: '25px',
+                            backdropFilter: 'blur(10px)'
+                        }}>
+                            <h3 style={{ margin: '0 0 20px 0', color: '#ffd93d' }}>Состояние Mirai</h3>
+                            <div style={{ marginBottom: '15px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>Настроение:</span>
+                                    <span style={{
+                                        background: 'rgba(255,107,157,0.3)',
+                                        padding: '4px 12px',
+                                        borderRadius: '12px',
+                                        fontSize: '12px',
+                                        textTransform: 'uppercase'
+                                    }}>{currentState.mood}</span>
+                                </div>
+                            </div>
+                            <div style={{ marginBottom: '15px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>Энергия:</span>
+                                    <div style={{
+                                        width: '100px',
+                                        height: '6px',
+                                        background: 'rgba(255,255,255,0.2)',
+                                        borderRadius: '3px',
+                                        overflow: 'hidden'
+                                    }}>
+                                        <div style={{
+                                            height: '100%',
+                                            width: `${currentState.energy * 100}%`,
+                                            background: 'linear-gradient(90deg, #4CAF50, #8BC34A)',
+                                            transition: 'width 0.3s ease'
+                                        }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>Время:</span>
+                                    <span>{timeOfDay}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h2 style={{ margin: '0 0 25px 0', fontSize: '2em', color: '#ffd93d' }}>Что нового?</h2>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '20px',
+                                background: 'rgba(255,255,255,0.1)',
+                                borderRadius: '15px',
+                                padding: '20px',
+                                backdropFilter: 'blur(10px)'
+                            }}>
+                                <div style={{ fontSize: '2.5em' }}>🎨</div>
+                                <div>
+                                    <h4 style={{ margin: '0 0 8px 0', color: '#ffd93d' }}>Новая творческая студия!</h4>
+                                    <p style={{ margin: '0', opacity: '0.8', lineHeight: '1.4' }}>
+                                        Теперь мы можем создавать арт, писать истории и сочинять музыку вместе!
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '20px',
+                                background: 'rgba(255,255,255,0.1)',
+                                borderRadius: '15px',
+                                padding: '20px',
+                                backdropFilter: 'blur(10px)'
+                            }}>
+                                <div style={{ fontSize: '2.5em' }}>📖</div>
+                                <div>
+                                    <h4 style={{ margin: '0 0 8px 0', color: '#ffd93d' }}>Мой личный дневник</h4>
+                                    <p style={{ margin: '0', opacity: '0.8', lineHeight: '1.4' }}>
+                                        Теперь вы можете читать мои мысли и воспоминания! Некоторые записи открываются по мере нашей дружбы.
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '20px',
+                                background: 'rgba(255,255,255,0.1)',
+                                borderRadius: '15px',
+                                padding: '20px',
+                                backdropFilter: 'blur(10px)'
+                            }}>
+                                <div style={{ fontSize: '2.5em' }}>🎮</div>
+                                <div>
+                                    <h4 style={{ margin: '0 0 8px 0', color: '#ffd93d' }}>Игровой центр</h4>
+                                    <p style={{ margin: '0', opacity: '0.8', lineHeight: '1.4' }}>
+                                        Играем в викторины, симуляторы трейдинга и логические игры!
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        function ChatPage({ updateMood }) {
+            const [messages, setMessages] = React.useState([
+                { id: 1, type: 'mirai', text: 'Привет! Я Mirai-chan! Как дела? ✨', timestamp: new Date() },
+                { id: 2, type: 'user', text: 'Привет Mirai! Всё отлично!', timestamp: new Date() },
+                { id: 3, type: 'mirai', text: 'Это замечательно! Я так рада! (◡ ‿ ◡)', timestamp: new Date() }
+            ]);
+            const [currentMessage, setCurrentMessage] = React.useState('');
+            
+            const miraiResponses = [
+                'Это так интересно! Расскажи больше! ✨',
+                'Хихи! Мне это нравится! (◕‿◕)',
+                'Ого! Я не знала об этом! 🤔',
+                'Ты такой умный! Я многому у тебя учусь! 💕',
+                'А давай поговорим о чем-то еще? 😊',
+                'Это делает меня счастливой! ヽ(°〇°)ﾉ'
+            ];
+            
+            const sendMessage = () => {
+                if (!currentMessage.trim()) return;
+                
+                const newMessage = {
+                    id: messages.length + 1,
+                    type: 'user',
+                    text: currentMessage,
+                    timestamp: new Date()
+                };
+                
+                setMessages([...messages, newMessage]);
+                setCurrentMessage('');
+                
+                // Simulate Mirai response
+                setTimeout(() => {
+                    const response = {
+                        id: messages.length + 2,
+                        type: 'mirai',
+                        text: miraiResponses[Math.floor(Math.random() * miraiResponses.length)],
+                        timestamp: new Date()
+                    };
+                    setMessages(prev => [...prev, response]);
+                    updateMood('HAPPY');
+                }, 1000);
+            };
+            
+            return (
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+                    <div style={{ padding: '20px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+                        <h2 style={{ margin: '0', color: 'white', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            💬 Чат с Mirai-chan
+                            <div style={{
+                                width: '12px',
+                                height: '12px',
+                                borderRadius: '50%',
+                                background: '#4CAF50',
+                                animation: 'pulse 2s ease-in-out infinite'
+                            }}></div>
+                        </h2>
+                    </div>
+                    
+                    <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
+                        {messages.map(message => (
+                            <div key={message.id} style={{
+                                display: 'flex',
+                                justifyContent: message.type === 'user' ? 'flex-end' : 'flex-start',
+                                marginBottom: '15px'
+                            }}>
+                                <div style={{
+                                    maxWidth: '70%',
+                                    padding: '12px 18px',
+                                    borderRadius: message.type === 'user' ? '20px 20px 5px 20px' : '20px 20px 20px 5px',
+                                    background: message.type === 'user' ? '#ff6b9d' : 'rgba(255,255,255,0.9)',
+                                    color: message.type === 'user' ? 'white' : '#333',
+                                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+                                }}>
+                                    {message.text}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <div style={{ padding: '20px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <input
+                                type="text"
+                                value={currentMessage}
+                                onChange={(e) => setCurrentMessage(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                                placeholder="Напиши сообщение Mirai..."
+                                style={{
+                                    flex: 1,
+                                    padding: '12px 18px',
+                                    border: 'none',
+                                    borderRadius: '25px',
+                                    background: 'rgba(255,255,255,0.9)',
+                                    outline: 'none',
+                                    fontSize: '16px'
+                                }}
+                            />
+                            <button
+                                onClick={sendMessage}
+                                style={{
+                                    padding: '12px 24px',
+                                    background: '#ff6b9d',
+                                    border: 'none',
+                                    borderRadius: '25px',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    transition: 'all 0.3s ease'
+                                }}
+                                onMouseEnter={(e) => e.target.style.background = '#ff8fb3'}
+                                onMouseLeave={(e) => e.target.style.background = '#ff6b9d'}
+                            >
+                                Отправить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        function AvatarPage({ currentState }) {
+            return (
+                <div style={{ padding: '40px', color: 'white', textAlign: 'center' }}>
+                    <h2 style={{
+                        fontSize: '2.5em',
+                        marginBottom: '30px',
+                        background: 'linear-gradient(45deg, #ffd93d, #ff6b9d)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent'
+                    }}>
+                        👧 3D Аватар Mirai
+                    </h2>
+                    
+                    <div style={{
+                        background: 'rgba(255,255,255,0.1)',
+                        borderRadius: '20px',
+                        padding: '60px',
+                        backdropFilter: 'blur(10px)',
+                        margin: '0 auto',
+                        maxWidth: '600px'
+                    }}>
+                        <div style={{ fontSize: '8em', marginBottom: '20px' }}>
+                            {MiraiPersonality.getMoodEmoji()}
+                        </div>
+                        <h3 style={{ color: '#ffd93d', marginBottom: '15px' }}>
+                            Настроение: {currentState.mood}
+                        </h3>
+                        <p style={{ opacity: '0.8', lineHeight: '1.6' }}>
+                            3D аватар с полной поддержкой эмоций и анимаций будет добавлен в следующей версии! 
+                            Пока что наслаждайтесь эмоциональными реакциями Mirai в текстовом формате.
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+        
+        function DiaryPage({ currentState }) {
+            const entries = [
+                {
+                    date: '22 сентября 2025',
+                    mood: 'EXCITED',
+                    title: 'Новый друг пришел!',
+                    preview: 'Сегодня такой замечательный день! К нему пришел новый друг...'
+                },
+                {
+                    date: '21 сентября 2025',
+                    mood: 'THOUGHTFUL',
+                    title: 'Размышления о рынках',
+                    preview: 'Сегодня изучала новые паттерны на графиках...'
+                },
+                {
+                    date: '20 сентября 2025',
+                    mood: 'PLAYFUL',
+                    title: 'Дождливый день дома',
+                    preview: 'Дождь стучит по окну... но у меня игривое настроение!'
+                }
+            ];
+            
+            return (
+                <div style={{ padding: '40px', color: 'white' }}>
+                    <h2 style={{
+                        fontSize: '2.5em',
+                        marginBottom: '30px',
+                        background: 'linear-gradient(45deg, #ffd93d, #ff6b9d)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent'
+                    }}>
+                        📖 Дневник Mirai-chan
+                    </h2>
+                    
+                    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                        {entries.map((entry, index) => (
+                            <div key={index} style={{
+                                background: 'rgba(255,255,255,0.1)',
+                                borderRadius: '15px',
+                                padding: '25px',
+                                marginBottom: '20px',
+                                backdropFilter: 'blur(10px)',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.target.style.background = 'rgba(255,255,255,0.2)';
+                                e.target.style.transform = 'translateY(-2px)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.background = 'rgba(255,255,255,0.1)';
+                                e.target.style.transform = 'none';
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <span style={{ fontSize: '1.5em' }}>{MiraiPersonality.getMoodEmoji()}</span>
+                                        <span style={{ fontSize: '14px', opacity: '0.8' }}>{entry.date}</span>
+                                    </div>
+                                    <span style={{
+                                        background: 'rgba(255,107,157,0.3)',
+                                        padding: '4px 12px',
+                                        borderRadius: '12px',
+                                        fontSize: '12px',
+                                        textTransform: 'uppercase'
+                                    }}>{entry.mood}</span>
+                                </div>
+                                <h3 style={{ margin: '0 0 10px 0', color: '#ffd93d' }}>{entry.title}</h3>
+                                <p style={{ margin: '0', opacity: '0.8', lineHeight: '1.4' }}>{entry.preview}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+        
+        function MusicPage({ updateMood }) {
+            const [isPlaying, setIsPlaying] = React.useState(false);
+            const [currentSong, setCurrentSong] = React.useState('Lo-fi Beats для трейдинга');
+            
+            const playlists = [
+                { name: 'Утренний анализ', icon: '🌅', songs: 12 },
+                { name: 'Активная торговля', icon: '⚡', songs: 8 },
+                { name: 'Вечерние размышления', icon: '🌙', songs: 15 },
+                { name: 'Аниме опенинги', icon: '🎌', songs: 20 }
+            ];
+            
+            return (
+                <div style={{ padding: '40px', color: 'white' }}>
+                    <h2 style={{
+                        fontSize: '2.5em',
+                        marginBottom: '30px',
+                        background: 'linear-gradient(45deg, #ffd93d, #ff6b9d)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent'
+                    }}>
+                        🎵 Музыкальная Студия
+                    </h2>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '30px' }}>
+                        <div>
+                            <h3 style={{ marginBottom: '20px', color: '#ffd93d' }}>Плейлисты</h3>
+                            {playlists.map((playlist, index) => (
+                                <div key={index} style={{
+                                    background: 'rgba(255,255,255,0.1)',
+                                    borderRadius: '10px',
+                                    padding: '15px',
+                                    marginBottom: '10px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease'
+                                }}
+                                onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
+                                onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <span style={{ fontSize: '1.5em' }}>{playlist.icon}</span>
+                                        <div>
+                                            <div style={{ fontWeight: 'bold' }}>{playlist.name}</div>
+                                            <div style={{ fontSize: '12px', opacity: '0.7' }}>{playlist.songs} треков</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <div style={{
+                            background: 'rgba(255,255,255,0.1)',
+                            borderRadius: '20px',
+                            padding: '30px',
+                            backdropFilter: 'blur(10px)',
+                            textAlign: 'center'
+                        }}>
+                            <div style={{ fontSize: '4em', marginBottom: '20px' }}>🎵</div>
+                            <h3 style={{ marginBottom: '10px', color: '#ffd93d' }}>{currentSong}</h3>
+                            <p style={{ opacity: '0.8', marginBottom: '30px' }}>Mirai-chan</p>
+                            
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px' }}>
+                                <button style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'white',
+                                    fontSize: '2em',
+                                    cursor: 'pointer',
+                                    opacity: '0.7',
+                                    transition: 'opacity 0.3s ease'
+                                }}
+                                onMouseEnter={(e) => e.target.style.opacity = '1'}
+                                onMouseLeave={(e) => e.target.style.opacity = '0.7'}>⏮️</button>
+                                
+                                <button
+                                    onClick={() => {
+                                        setIsPlaying(!isPlaying);
+                                        updateMood('HAPPY');
+                                    }}
+                                    style={{
+                                        background: '#ff6b9d',
+                                        border: 'none',
+                                        borderRadius: '50%',
+                                        width: '60px',
+                                        height: '60px',
+                                        color: 'white',
+                                        fontSize: '1.5em',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.background = '#ff8fb3'}
+                                    onMouseLeave={(e) => e.target.style.background = '#ff6b9d'}
+                                >
+                                    {isPlaying ? '⏸️' : '▶️'}
+                                </button>
+                                
+                                <button style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'white',
+                                    fontSize: '2em',
+                                    cursor: 'pointer',
+                                    opacity: '0.7',
+                                    transition: 'opacity 0.3s ease'
+                                }}
+                                onMouseEnter={(e) => e.target.style.opacity = '1'}
+                                onMouseLeave={(e) => e.target.style.opacity = '0.7'}>⏭️</button>
+                            </div>
+                            
+                            <div style={{
+                                background: 'rgba(255,255,255,0.2)',
+                                height: '4px',
+                                borderRadius: '2px',
+                                overflow: 'hidden',
+                                marginBottom: '10px'
+                            }}>
+                                <div style={{
+                                    background: '#ff6b9d',
+                                    height: '100%',
+                                    width: isPlaying ? '45%' : '0%',
+                                    transition: 'width 0.3s ease'
+                                }}></div>
+                            </div>
+                            
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', opacity: '0.7' }}>
+                                <span>1:23</span>
+                                <span>3:45</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        function GamesPage({ updateMood }) {
+            const [score, setScore] = React.useState(0);
+            const [gameStarted, setGameStarted] = React.useState(false);
+            
+            const games = [
+                { name: 'Крипто Викторина', icon: '🧠', difficulty: 'Легко' },
+                { name: 'Симулятор Трейдинга', icon: '📈', difficulty: 'Средне' },
+                { name: 'Игра на Память', icon: '🎭', difficulty: 'Легко' },
+                { name: 'Аниме Угадайка', icon: '🎌', difficulty: 'Сложно' }
+            ];
+            
+            return (
+                <div style={{ padding: '40px', color: 'white' }}>
+                    <h2 style={{
+                        fontSize: '2.5em',
+                        marginBottom: '30px',
+                        background: 'linear-gradient(45deg, #ffd93d, #ff6b9d)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent'
+                    }}>
+                        🎮 Игровой Центр
+                    </h2>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+                        {games.map((game, index) => (
+                            <div key={index} style={{
+                                background: 'rgba(255,255,255,0.1)',
+                                borderRadius: '15px',
+                                padding: '25px',
+                                textAlign: 'center',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease'
+                            }}
+                            onClick={() => {
+                                setGameStarted(true);
+                                updateMood('PLAYFUL');
+                            }}
+                            onMouseEnter={(e) => {
+                                e.target.style.background = 'rgba(255,255,255,0.2)';
+                                e.target.style.transform = 'translateY(-5px)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.background = 'rgba(255,255,255,0.1)';
+                                e.target.style.transform = 'none';
+                            }}>
+                                <div style={{ fontSize: '3em', marginBottom: '15px' }}>{game.icon}</div>
+                                <h3 style={{ margin: '0 0 10px 0', color: '#ffd93d' }}>{game.name}</h3>
+                                <p style={{ margin: '0', opacity: '0.7', fontSize: '14px' }}>Сложность: {game.difficulty}</p>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    {gameStarted && (
+                        <div style={{
+                            background: 'rgba(255,255,255,0.1)',
+                            borderRadius: '20px',
+                            padding: '30px',
+                            backdropFilter: 'blur(10px)',
+                            textAlign: 'center'
+                        }}>
+                            <h3 style={{ marginBottom: '20px', color: '#ffd93d' }}>Крипто Викторина</h3>
+                            <p style={{ marginBottom: '20px' }}>Что означает аббревиатура "DeFi"?</p>
+                            
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px', margin: '0 auto 20px' }}>
+                                {['Decentralized Finance', 'Digital Finance', 'Distributed Finance', 'Defined Finance'].map((option, index) => (
+                                    <button key={index} style={{
+                                        background: 'rgba(255,255,255,0.1)',
+                                        border: 'none',
+                                        padding: '12px',
+                                        borderRadius: '10px',
+                                        color: 'white',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                    onClick={() => {
+                                        if (index === 0) {
+                                            setScore(score + 10);
+                                            updateMood('EXCITED');
+                                        }
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
+                                    onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}>{option}</button>
+                                ))}
+                            </div>
+                            
+                            <div style={{ marginBottom: '20px' }}>
+                                <span style={{ fontSize: '1.2em', color: '#ffd93d' }}>Счет: {score}</span>
+                            </div>
+                            
+                            <button
+                                onClick={() => setGameStarted(false)}
+                                style={{
+                                    background: '#ff6b9d',
+                                    border: 'none',
+                                    padding: '12px 24px',
+                                    borderRadius: '25px',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                Закрыть игру
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+        
+        function CreativePage({ updateMood }) {
+            const [activeProject, setActiveProject] = React.useState(null);
+            
+            const projects = [
+                { name: 'Рисование', icon: '🎨', description: 'Создавай арт вместе с Mirai' },
+                { name: 'Написание', icon: '✍️', description: 'Пиши истории и сценарии' },
+                { name: 'Музыка', icon: '🎵', description: 'Сочиняй мелодии и песни' },
+                { name: 'Видео', icon: '🎬', description: 'Создавай видео и анимации' }
+            ];
+            
+            return (
+                <div style={{ padding: '40px', color: 'white' }}>
+                    <h2 style={{
+                        fontSize: '2.5em',
+                        marginBottom: '30px',
+                        background: 'linear-gradient(45deg, #ffd93d, #ff6b9d)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent'
+                    }}>
+                        🎨 Творческая Студия
+                    </h2>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+                        {projects.map((project, index) => (
+                            <div key={index} style={{
+                                background: 'rgba(255,255,255,0.1)',
+                                borderRadius: '15px',
+                                padding: '25px',
+                                textAlign: 'center',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease'
+                            }}
+                            onClick={() => {
+                                setActiveProject(project);
+                                updateMood('EXCITED');
+                            }}
+                            onMouseEnter={(e) => {
+                                e.target.style.background = 'rgba(255,255,255,0.2)';
+                                e.target.style.transform = 'translateY(-5px)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.background = 'rgba(255,255,255,0.1)';
+                                e.target.style.transform = 'none';
+                            }}>
+                                <div style={{ fontSize: '3em', marginBottom: '15px' }}>{project.icon}</div>
+                                <h3 style={{ margin: '0 0 10px 0', color: '#ffd93d' }}>{project.name}</h3>
+                                <p style={{ margin: '0', opacity: '0.7', fontSize: '14px' }}>{project.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    {activeProject && (
+                        <div style={{
+                            background: 'rgba(255,255,255,0.1)',
+                            borderRadius: '20px',
+                            padding: '30px',
+                            backdropFilter: 'blur(10px)',
+                            textAlign: 'center'
+                        }}>
+                            <h3 style={{ marginBottom: '20px', color: '#ffd93d' }}>{activeProject.name}</h3>
+                            <div style={{ fontSize: '4em', marginBottom: '20px' }}>{activeProject.icon}</div>
+                            <p style={{ marginBottom: '20px', lineHeight: '1.6' }}>
+                                Творческая студия для {activeProject.name.toLowerCase()} будет доступна в полной версии! 
+                                Здесь вы сможете создавать удивительные проекты вместе с Mirai-chan.
+                            </p>
+                            <button
+                                onClick={() => setActiveProject(null)}
+                                style={{
+                                    background: '#ff6b9d',
+                                    border: 'none',
+                                    padding: '12px 24px',
+                                    borderRadius: '25px',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                Закрыть
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+        
+        // Error Boundary
+        class ErrorBoundary extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false };
+            }
+            
+            static getDerivedStateFromError(error) {
+                return { hasError: true };
+            }
+            
+            componentDidCatch(error, errorInfo) {
+                console.error('Mirai App Error:', error, errorInfo);
+            }
+            
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div className="error-fallback">
+                            <div className="error-content">
+                                <div className="error-icon">😔</div>
+                                <div className="error-title">Упс! Что-то пошло не так</div>
+                                <div className="error-message">
+                                    Mirai-chan временно недоступна. Пожалуйста, обновите страницу.
+                                </div>
+                                <button className="error-button" onClick={() => window.location.reload()}>
+                                    🔄 Обновить страницу
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+                
+                return this.props.children;
+            }
+        }
+        
+        // Render App
+        function App() {
+            return (
+                <ErrorBoundary>
+                    <LivingMiraiApp />
+                </ErrorBoundary>
+            );
+        }
+        
+        // Start the app
+        ReactDOM.render(<App />, document.getElementById('app'));
+    </script>
+    
+    <!-- Analytics (placeholder) -->
+    <script>
+        // Analytics tracking would go here
+        console.log('Mirai-chan app started successfully! ✨');
+    </script>
+</body>
+</html>
