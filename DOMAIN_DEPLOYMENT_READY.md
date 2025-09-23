@@ -11,8 +11,8 @@
 
 ## 🌐 Target Domains
 
-### Primary Domain: `mirai-agent.com`
-- **Purpose**: Trading Interface & Portfolio Management
+### Primary Domain: `aimirai.online`
+- **Purpose**: Trading Panel & Portfolio Management
 - **Features**:
   - Real-time trading dashboard
   - Portfolio analytics
@@ -20,8 +20,8 @@
   - Live market data
   - P&L tracking
 
-### Secondary Domain: `mirai-chan.com`
-- **Purpose**: AI Companion & Creative Studio
+### Secondary Domain: `aimirai.info`
+- **Purpose**: AI Studio & Creative Tools
 - **Features**:
   - AI chat interface
   - Creative studio tools
@@ -230,8 +230,8 @@ docker-compose -f docker-compose.production.yml up -d --build
 4. Access your live trading and AI companion platforms!
 
 **Domains will be live at**:
-- 🌐 **https://mirai-agent.com** (Trading Interface)
-- 🤖 **https://mirai-chan.com** (AI Companion)
+- 🌐 **https://aimirai.online** (Trading Panel)
+- 🤖 **https://aimirai.info** (AI Studio)
 
 ---
 

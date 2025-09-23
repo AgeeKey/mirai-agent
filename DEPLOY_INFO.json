@@ -1,12 +1,24 @@
 {
-    "version": "59530844",
+    "version": "50fbab64",
     "timestamp": "2025-09-23T12:45:00Z",
-    "branch": "main",
-    "commit_message": "Production deploy: 2025-09-23 15:45:20",
-    "domains": ["mirai-agent.com", "mirai-chan.com"],
+    "branch": "aimirai-domains", 
+    "commit_message": "Production deploy with aimirai domains",
+    "domains": ["aimirai.online", "aimirai.info"],
     "services": {
         "api": "http://localhost:8002",
         "web": "http://localhost:3002",
         "monitoring": "http://localhost:3000"
+    },
+    "domain_config": {
+        "panel": {
+            "domain": "aimirai.online",
+            "type": "trading_panel",
+            "features": ["trading", "portfolio", "analytics", "risk_management"]
+        },
+        "studio": {
+            "domain": "aimirai.info", 
+            "type": "ai_studio",
+            "features": ["ai_chat", "creative_tools", "music_synthesis", "code_generation"]
+        }
     }
 }
