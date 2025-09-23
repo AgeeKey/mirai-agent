@@ -1,0 +1,12 @@
+{
+    "version": "59530844",
+    "timestamp": "2025-09-23T12:45:00Z",
+    "branch": "main",
+    "commit_message": "Production deploy: 2025-09-23 15:45:20",
+    "domains": ["mirai-agent.com", "mirai-chan.com"],
+    "services": {
+        "api": "http://localhost:8002",
+        "web": "http://localhost:3002",
+        "monitoring": "http://localhost:3000"
+    }
+}

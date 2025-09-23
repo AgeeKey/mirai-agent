@@ -1,0 +1,24 @@
+# Local Domain Testing Information
+
+## Simulate Domain Access:
+
+### Trading Interface (mirai-agent.com):
+http://localhost:3002?domain=mirai-agent
+
+### AI Companion (mirai-chan.com):
+http://localhost:3002?domain=mirai-chan
+
+## API Endpoints:
+- Health: http://localhost:8002/health
+- Trading: http://localhost:8002/api/trading/status
+- AI: http://localhost:8002/api/ai/chat
+
+## Features Test:
+1. Trading Panel: Portfolio management, P&L tracking
+2. Analytics: AI predictions, market insights  
+3. Studio: Creative tools, music synthesis
+4. Domain Switching: Seamless transitions
+
+## Production URLs (after deployment):
+- https://mirai-agent.com (Trading)
+- https://mirai-chan.com (AI Companion)

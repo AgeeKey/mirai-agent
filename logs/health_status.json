@@ -1,12 +1,12 @@
 {
-  "timestamp": "2025-09-23T11:54:40.948525",
+  "timestamp": "2025-09-23T12:05:14.400239",
   "services": {
     "api": "unhealthy",
     "web": "healthy"
   },
   "system": {
-    "cpu": 32.2,
-    "memory": 87.8,
-    "disk": 10.145022350878058
+    "cpu": 5.4,
+    "memory": 91.7,
+    "disk": 10.436177165812829
   }
 }
